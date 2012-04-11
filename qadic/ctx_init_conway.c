@@ -116,7 +116,7 @@ void qadic_ctx_init_conway(qadic_ctx_t ctx,
             strcpy(ctx->var, var);
 
             fclose(file);
-            free(buf);
+            flint_free(buf);
             return;
         }
     }
