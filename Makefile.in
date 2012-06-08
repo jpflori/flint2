@@ -1,7 +1,6 @@
 LIBS=-L$(CURDIR) -L$(FLINT_MPIR_LIB_DIR) -L$(FLINT_MPFR_LIB_DIR) -L$(FLINT_NTL_LIB_DIR) -lflint -lmpfr -lmpir -lm -lpthread
 LIBS2=-L$(FLINT_MPIR_LIB_DIR) -L$(FLINT_MPFR_LIB_DIR) -L$(FLINT_NTL_LIB_DIR) -lmpfr -lmpir -lm -lpthread
 INCS=-I$(CURDIR) -I$(FLINT_MPIR_INCLUDE_DIR) -I$(FLINT_MPFR_INCLUDE_DIR) -I$(FLINT_NTL_INCLUDE_DIR)
-LINKLIBS=
 
 LD_LIBRARY_PATH:=${CURDIR}:${FLINT_MPFR_LIB_DIR}:${FLINT_MPIR_LIB_DIR}:${FLINT_NTL_LIB_DIR}:${LD_LIBRARY_PATH}
 export LD_LIBRARY_PATH
@@ -11,7 +10,7 @@ SOURCES = $(wildcard *.c)
 
 HEADERS = $(wildcard *.h)
 
-OBJS = $(patsubst %.c, build/%.o, $(SOURCES)) $(foreach dir, $(BUILD_DIRS), build/$(dir)/$(dir).a)
+OBJS = $(patsubst %.c, build/%.o, $(SOURCES))
 
 LIB_OBJS = $(patsubst %.c, build/%.lo, $(SOURCES)) $(foreach dir, $(BUILD_DIRS), build/$(dir)/*.lo)
 
@@ -33,10 +32,7 @@ PROFS = $(patsubst %.c, %, $(PROF_SOURCES))
 
 TUNE = $(patsubst %.c, %, $(TUNE_SOURCES))
 
-all: all-dirs $(OBJS) recursive library 
-
-all-dirs:
-	$(foreach dir, $(BUILD_DIRS), mkdir -p build/$(dir);)
+all: recursive library 
 
 clean:
 	$(foreach dir, $(BUILD_DIRS), export BUILD_DIR=../build/$(dir); $(MAKE) -C $(dir) clean;)
@@ -60,7 +56,7 @@ tune: all
 	$(foreach dir, $(BUILD_DIRS), mkdir -p build/$(dir)/tune; export BUILD_DIR=../build/$(dir); $(MAKE) -C $(dir) tune;)
 
 recursive:
-	$(foreach dir, $(BUILD_DIRS), export BUILD_DIR=../build/$(dir); export MOD_DIR=$(dir); $(MAKE) -C $(dir);) 
+	$(foreach dir, $(BUILD_DIRS), mkdir -p build/$(dir); export BUILD_DIR=../build/$(dir); export MOD_DIR=$(dir); $(MAKE) -C $(dir);) 
 
 examples: all $(LOBJS) library
 	mkdir -p build/examples
@@ -93,7 +89,7 @@ library: library-recursive $(OBJS) $(LIB_OBJS)
 		fi; \
 		if [ "$(FLINT_STATIC)" -eq "1" ]; then \
 			$(CXX) -fPIC  $(CFLAGS) $(INCS) -c interfaces/NTL-interface.cpp -o build/interfaces/NTL-interface.o; \
-			$(AR) rcs libflint.a build/interfaces/NTL-interface.o $(OBJS) $(LINKLIBS); \
+			$(AR) rcs libflint.a build/interfaces/NTL-interface.o $(OBJS); \
 		fi; \
 	fi
 	if [ "$(WANT_NTL)" -ne "1" ]; then \
@@ -101,7 +97,8 @@ library: library-recursive $(OBJS) $(LIB_OBJS)
 			$(CC) -fPIC -shared $(LIB_OBJS) $(LIBS2) -o $(FLINT_LIB); \
 		fi; \
 		if [ "$(FLINT_STATIC)" -eq "1" ]; then \
-			$(AR) rcs libflint.a $(OBJS) $(LINKLIBS); \
+			$(AR) rcs libflint.a $(OBJS); \
+			$(foreach mod, $(BUILD_DIRS), $(AR) rcs libflint.a build/$(mod)/*.o;) \
 		fi; \
 	fi
 
