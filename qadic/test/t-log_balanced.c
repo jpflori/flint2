@@ -34,7 +34,7 @@ main(void)
     int i, result;
     flint_rand_t state;
 
-    printf("log_rectangular... ");
+    printf("log_balanced... ");
     fflush(stdout);
 
     flint_randinit(state);
@@ -54,7 +54,7 @@ main(void)
         qadic_t a, b;
 
         fmpz_init(p);
-        fmpz_set_ui(p, n_randprime(state, 2 + n_randint(state, 3), 1));
+        fmpz_set_ui(p, n_randprime(state, 3 + n_randint(state, 3), 1));
         d = n_randint(state, 10) + 1;
         N = n_randint(state, 50) + 1;
         qadic_ctx_init_conway(ctx, p, d, N, "a", PADIC_SERIES);
@@ -69,8 +69,8 @@ main(void)
         qadic_one(b, ctx);
         qadic_add(a, a, b, ctx);
 
-        ans1 = qadic_log_rectangular(b, a, ctx);
-        ans2 = qadic_log_rectangular(a, a, ctx);
+        ans1 = qadic_log_balanced(b, a, ctx);
+        ans2 = qadic_log_balanced(a, a, ctx);
 
         result = (ans1 == ans2) && (!ans1 || qadic_equal(a, b));
         if (!result)
@@ -127,11 +127,11 @@ main(void)
 
         qadic_mul(c, a, b, ctx);
 
-        qadic_log_rectangular(d, a, ctx);
-        qadic_log_rectangular(e, b, ctx);
+        qadic_log_balanced(d, a, ctx);
+        qadic_log_balanced(e, b, ctx);
         qadic_add(f, d, e, ctx);
 
-        qadic_log_rectangular(g, c, ctx);
+        qadic_log_balanced(g, c, ctx);
 
         result = (qadic_equal(f, g));
         if (!result)
@@ -144,6 +144,7 @@ main(void)
             printf("e = log(b)          = "), qadic_print_pretty(e, ctx), printf("\n");
             printf("f = log(a) + log(b) = "), qadic_print_pretty(f, ctx), printf("\n");
             printf("g = log(a * b)      = "), qadic_print_pretty(g, ctx), printf("\n");
+            qadic_ctx_print(ctx);
             abort();
         }
 
@@ -169,7 +170,7 @@ main(void)
         qadic_t a, b, c;
 
         fmpz_init(p);
-        fmpz_set_ui(p, n_randprime(state, 2 + n_randint(state, 3), 1));
+        fmpz_set_ui(p, n_randprime(state, 3 + n_randint(state, 3), 1));
         deg = n_randint(state, 10) + 1;
         N = n_randint(state, 50) + 1;
         qadic_ctx_init_conway(ctx, p, deg, N, "a", PADIC_SERIES);
@@ -186,15 +187,15 @@ main(void)
         }
 
         qadic_exp(b, a, ctx);
-        qadic_log_rectangular(c, b, ctx);
+        qadic_log_balanced(c, b, ctx);
 
         result = (qadic_equal(a, c));
         if (!result)
         {
             printf("FAIL (log(exp(x)) == x):\n\n");
-            printf("a = "), qadic_print_pretty(a, ctx), printf("\n");
-            printf("b = "), qadic_print_pretty(b, ctx), printf("\n");
-            printf("c = "), qadic_print_pretty(c, ctx), printf("\n");
+            printf("a =          "), qadic_print_pretty(a, ctx), printf("\n");
+            printf("b = exp(a) = "), qadic_print_pretty(b, ctx), printf("\n");
+            printf("c = log(b) = "), qadic_print_pretty(c, ctx), printf("\n");
             abort();
         }
 
