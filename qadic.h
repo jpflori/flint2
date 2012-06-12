@@ -306,11 +306,25 @@ void qadic_pow(qadic_t x, const qadic_t y, const fmpz_t e, const qadic_ctx_t ctx
 
 /* Special functions *********************************************************/
 
+void _qadic_exp_rectangular(fmpz *rop, const fmpz *op, long v, long len, 
+                            const fmpz *a, const long *j, long lena, 
+                            const fmpz_t p, long N);
+
+int qadic_exp_rectangular(qadic_t rop, const qadic_t op, 
+                          const qadic_ctx_t ctx);
+
+static __inline__
 void _qadic_exp(fmpz *rop, const fmpz *op, long v, long len, 
                 const fmpz *a, const long *j, long lena, 
-                const fmpz_t p, long N);
+                const fmpz_t p, long N)
+{
+    _qadic_exp_rectangular(rop, op, v, len, a, j, lena, p, N);
+}
 
-int qadic_exp(qadic_t rop, const qadic_t op, const qadic_ctx_t ctx);
+int qadic_exp(qadic_t rop, const qadic_t op, const qadic_ctx_t ctx)
+{
+    return qadic_exp_rectangular(rop, op, ctx);
+}
 
 void _qadic_log_rectangular(fmpz *z, const fmpz *y, long v, long len, 
                             const fmpz *a, const long *j, long lena, 
@@ -336,6 +350,14 @@ void _qadic_trace(fmpz_t rop, const fmpz *op, long len,
                   const fmpz *a, const long *j, long lena, const fmpz_t pN);
 
 void qadic_trace(padic_t rop, const qadic_t op, const qadic_ctx_t ctx);
+
+void _qadic_norm(fmpz_t rop, const fmpz *op, long len, 
+                 const fmpz *a, const long *j, long lena, 
+                 const fmpz_t p, long N);
+
+void qadic_norm(padic_t rop, const qadic_t op, const qadic_ctx_t ctx);
+void qadic_norm_analytic(padic_t rop, const qadic_t op, const qadic_ctx_t ctx);
+void qadic_norm_resultant(padic_t rop, const qadic_t op, const qadic_ctx_t ctx);
 
 int qadic_sqrt(qadic_t rop, const qadic_t op, const qadic_ctx_t ctx);
 
