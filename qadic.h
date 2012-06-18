@@ -72,8 +72,7 @@ static __inline__ long qadic_ctx_degree(const qadic_ctx_t ctx)
     return ctx->j[ctx->len - 1];
 }
 
-static __inline__ void 
-qadic_ctx_print(const qadic_ctx_t ctx)
+static __inline__ void qadic_ctx_print(const qadic_ctx_t ctx)
 {
     long i, k;
 
@@ -118,8 +117,7 @@ static __inline__ void qadic_clear(qadic_t x)
 }
 
 static __inline__ void
-_fmpz_poly_reduce(fmpz *R, long lenR, 
-                  const fmpz *a, const long *j, long len)
+_fmpz_poly_reduce(fmpz *R, long lenR, const fmpz *a, const long *j, long len)
 {
     const long d = j[len - 1];
     long i, k;
@@ -136,40 +134,27 @@ _fmpz_poly_reduce(fmpz *R, long lenR,
     }
 }
 
-static __inline__ void
+static __inline__ void 
 _fmpz_mod_poly_reduce(fmpz *R, long lenR, 
                       const fmpz *a, const long *j, long len, const fmpz_t p)
 {
     const long d = j[len - 1];
-    long i, k;
 
-    FMPZ_VEC_NORM(R, lenR);
-
-    _fmpz_vec_scalar_mod_fmpz(R, R, lenR, p);
-
-    for (i = lenR - 1; i >= d; i--)
-    {
-        for (k = len - 2; k >= 0; k--)
-        {
-            const long t = j[k] + i - d;
-
-            fmpz_submul(R + t, R + i, a + k);
-            fmpz_mod(R + t, R + t, p);
-        }
-        fmpz_zero(R + i);
-    }
+    _fmpz_poly_reduce(R, lenR, a, j, len);
+    _fmpz_vec_scalar_mod_fmpz(R, R, d, p);
 }
 
 static __inline__ void qadic_reduce(qadic_t x, const qadic_ctx_t ctx)
 {
-    if (x->val >= (&ctx->pctx)->N)
+    const long N = (&ctx->pctx)->N;
+    const long d = ctx->j[ctx->len - 1];
+
+    if (x->val >= N)
     {
         padic_poly_zero(x);
     }
     else
     {
-        const long d = ctx->j[ctx->len - 1];
-
         if (x->length > d)
         {
             fmpz_t pow;
@@ -333,24 +318,23 @@ void qadic_pow(qadic_t x, const qadic_t y, const fmpz_t e, const qadic_ctx_t ctx
 
 void _qadic_exp_rectangular(fmpz *rop, const fmpz *op, long v, long len, 
                             const fmpz *a, const long *j, long lena, 
-                            const fmpz_t p, long N);
+                            const fmpz_t p, long N, const fmpz_t pN);
 
 int qadic_exp_rectangular(qadic_t rop, const qadic_t op, 
                           const qadic_ctx_t ctx);
 
-static __inline__
-void _qadic_exp(fmpz *rop, const fmpz *op, long v, long len, 
-                const fmpz *a, const long *j, long lena, 
-                const fmpz_t p, long N)
-{
-    _qadic_exp_rectangular(rop, op, v, len, a, j, lena, p, N);
-}
+void _qadic_exp_balanced(fmpz *rop, const fmpz *op, long v, long len, 
+                         const fmpz *a, const long *j, long lena, 
+                         const fmpz_t p, long N, const fmpz_t pN);
 
-static __inline__ 
-int qadic_exp(qadic_t rop, const qadic_t op, const qadic_ctx_t ctx)
-{
-    return qadic_exp_rectangular(rop, op, ctx);
-}
+int qadic_exp_balanced(qadic_t rop, const qadic_t op, 
+                       const qadic_ctx_t ctx);
+
+void _qadic_exp(fmpz *rop, const fmpz *op, long v, long len, 
+                           const fmpz *a, const long *j, long lena, 
+                           const fmpz_t p, long N, const fmpz_t pN);
+
+int qadic_exp(qadic_t rop, const qadic_t op, const qadic_ctx_t ctx);
 
 void _qadic_log_rectangular(fmpz *z, const fmpz *y, long v, long len, 
                             const fmpz *a, const long *j, long lena, 
@@ -364,11 +348,11 @@ void _qadic_log_balanced(fmpz *z, const fmpz *y, long len,
 
 int qadic_log_balanced(qadic_t rop, const qadic_t op, const qadic_ctx_t ctx);
 
-static __inline__ 
-int qadic_log(qadic_t rop, const qadic_t op, const qadic_ctx_t ctx)
-{
-    return qadic_log_rectangular(rop, op, ctx);
-}
+void _qadic_log(fmpz *z, const fmpz *y, long v, long len, 
+                const fmpz *a, const long *j, long lena, 
+                const fmpz_t p, long N, const fmpz_t pN);
+
+int qadic_log(qadic_t rop, const qadic_t op, const qadic_ctx_t ctx);
 
 void qadic_frobenius(qadic_t rop, const qadic_t op, long e, const qadic_ctx_t ctx);
 
