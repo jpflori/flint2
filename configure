@@ -285,7 +285,6 @@ if [ -z "$CFLAGS" ]; then
    CFLAGS="-O2 -g -ansi -pedantic -Wall $POPCNT_FLAG $ABI_FLAG"
 fi
 
-<<<<<<< HEAD
 if [ -z "$CC" ]; then
    CC=gcc
 fi
