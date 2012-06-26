@@ -41,7 +41,7 @@ void _qadic_dense_mul(fmpz *rop,
     t = _fmpz_vec_init(len1 + len2 - 1);
 
     _fmpz_poly_mul(t, op1, len1, op2, len2);
-    _fmpz_mod_poly_dense_reduce(t, rop, len1 + len2 - 1, mod, lenmod, pN);
+    _fmpz_mod_poly_dense_reduce(rop, t, len1 + len2 - 1, mod, lenmod, pN);
 
     _fmpz_vec_clear(t, len1 + len2 - 1);
 }

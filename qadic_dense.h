@@ -128,7 +128,7 @@ _fmpz_mod_poly_dense_reduce(fmpz* R,
     }
     else
     {
-        _fmpz_vec_scalar_mod_fmpz(R, R, lenA, p);
+        _fmpz_vec_scalar_mod_fmpz(R, A, lenA, p);
     }
     /* The following could also be used and 1L should be replaced by a proper inverse... */
     /*if (lenA > lenB)
