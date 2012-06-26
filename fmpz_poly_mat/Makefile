@@ -24,7 +24,7 @@ library: $(LIB_OBJS)
 
 profile:
 	$(foreach prog, $(PROFS), $(CC) -O2 -std=c99 $(INCS) $(prog).c ../profiler.o -o $(BUILD_DIR)/$(prog) $(LIBS) || exit $$?;)
-        
+
 tune: $(TUNE_SOURCES)
 	$(foreach prog, $(TUNE), $(CC) -O2 -std=c99 $(INCS) $(prog).c -o $(BUILD_DIR)/$(prog) $(LIBS) || exit $$?;)
 
@@ -35,9 +35,9 @@ $(BUILD_DIR)/%.lo: %.c
 	$(CC) -fPIC $(CFLAGS) $(INCS) -c $< -o $@
 
 clean:
-	rm -rf $(BUILD_DIR)	
+	rm -rf $(BUILD_DIR)
 
-check: $(TESTS_RUN)
+check: $(TESTS) $(TESTS_RUN)
 
 %_RUN: %
 	@$<
