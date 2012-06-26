@@ -218,6 +218,16 @@ case $MACHINE in
       cp fft_tuning32.in fft_tuning.h;;
 esac
 
+#defaults for CC and CXX
+
+if [ -z "$CC" ]; then
+   CC=gcc
+fi
+
+if [ -z "$CXX" ]; then
+   CXX=g++
+fi
+
 #ABI flag
 if [ "$ABI" = "32" ]; then
    ABI_FLAG="-m32"
@@ -275,18 +285,10 @@ else
    echo "no"
 fi
 
-#defaults for CFLAGS, CC and CXX
+#defaults for CFLAGS
 
 if [ -z "$CFLAGS" ]; then
    CFLAGS="-O2 -g -ansi -pedantic -Wall $POPCNT_FLAG $ABI_FLAG"
-fi
-
-if [ -z "$CC" ]; then
-   CC=gcc
-fi
-
-if [ -z "$CXX" ]; then
-   CXX=g++
 fi
 
 #add tuning parameters to CFLAGS
