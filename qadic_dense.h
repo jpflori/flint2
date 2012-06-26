@@ -121,8 +121,15 @@ _fmpz_mod_poly_dense_reduce(fmpz* R,
 {
     /* FMPZ_VEC_NORM(A, lenA); */
 
-    _fmpz_poly_dense_reduce(R, A, lenA, B, lenB);
-    _fmpz_vec_scalar_mod_fmpz(R, R, lenA, p);
+    if (lenA >= lenB)
+    {
+        _fmpz_poly_dense_reduce(R, A, lenA, B, lenB);
+        _fmpz_vec_scalar_mod_fmpz(R, R, lenA, p);
+    }
+    else
+    {
+        _fmpz_vec_scalar_mod_fmpz(R, R, lenA, p);
+    }
     /* The following could also be used and 1L should be replaced by a proper inverse... */
     /*if (lenA > lenB)
     {
@@ -135,33 +142,31 @@ static __inline__ void qadic_dense_reduce(qadic_dense_t x, const qadic_dense_ctx
     const long N = (&ctx->pctx)->N;
     const long d = qadic_dense_ctx_degree(ctx);
 
-    if (x->val >= N)
+    if (x->length == 0 || x->val >= N)
     {
         padic_poly_zero(x);
     }
     else
     {
-        if (x->length > d)
-        {
-            fmpz_t pow;
-            fmpz *t;
-            int alloc;
+        fmpz_t pow;
+        fmpz *t;
+        int alloc;
 
-            t = _fmpz_vec_init(x->length);
+        t = _fmpz_vec_init(x->length);
 
-            alloc = _padic_ctx_pow_ui(pow, (&ctx->pctx)->N - x->val, &ctx->pctx);
+        alloc = _padic_ctx_pow_ui(pow, (&ctx->pctx)->N - x->val, &ctx->pctx);
 
-            _fmpz_mod_poly_dense_reduce(t, x->coeffs, x->length, ctx->mod->coeffs, d + 1, pow);
-            _fmpz_vec_set(x->coeffs, t, d);
-            _padic_poly_set_length(x, d);
-            _padic_poly_normalise(x);
-            padic_poly_canonicalise(x, (&ctx->pctx)->p);
+        _fmpz_mod_poly_dense_reduce(t, x->coeffs, x->length, ctx->mod->coeffs, d + 1, pow);
+        _fmpz_vec_set(x->coeffs, t, d);
+        /* _padic_poly_set_length(x, FLINT_MIN(x->length, d)); */
+        _padic_poly_set_length(x, d);
+        _padic_poly_normalise(x);
+        padic_poly_canonicalise(x, (&ctx->pctx)->p);
 
-            if (alloc)
-                fmpz_clear(pow);
+        if (alloc)
+            fmpz_clear(pow);
 
-            _fmpz_vec_clear(t, x->length);
-        }
+        _fmpz_vec_clear(t, x->length);
     }
 }
 
@@ -287,12 +292,8 @@ qadic_dense_neg(qadic_dense_t x, const qadic_dense_t y, const qadic_dense_ctx_t 
     padic_poly_neg(x, y, &ctx->pctx);
 }
 
-static __inline__ void 
-qadic_dense_mul(qadic_dense_t x, const qadic_dense_t y, const qadic_dense_t z, const qadic_dense_ctx_t ctx)
-{
-    padic_poly_mul(x, y, z, &ctx->pctx);
-    qadic_dense_reduce(x, ctx);
-}
+void qadic_dense_mul(qadic_dense_t x, const qadic_dense_t y, const qadic_dense_t z,
+                     const qadic_dense_ctx_t ctx);
 
 void _qadic_dense_inv(fmpz *rop, const fmpz *op, long len, 
                 const fmpz *mod, long lenmod, 
