@@ -20,7 +20,6 @@
 /******************************************************************************
 
     Copyright (C) 2009 William Hart
-    Copyright (C) 2010 Sebastian Pancratz
 
 ******************************************************************************/
 
@@ -28,52 +27,61 @@
 #include <stdlib.h>
 #include <mpir.h>
 #include "flint.h"
-#include "fmpz.h"
-#include "fmpz_vec.h"
 #include "ulong_extras.h"
 
-int
-main(void)
+int main(void)
 {
-    int i, result;
-    flint_rand_t state;
+   int i, result;
+   flint_rand_t state;
+   
+   printf("powmod_ui_precomp....");
+   fflush(stdout);
 
-    printf("max_limbs....");
-    fflush(stdout);
+   flint_randinit(state);
 
-    flint_randinit(state);
+   for (i = 0; i < 100000; i++)
+   {
+      mp_limb_t a, d, r1, r2, bits;
+      mpz_t a_m, d_m, r2_m;
+      mp_limb_t exp;
+      double dpre;
 
-    for (i = 0; i < 1000 * flint_test_multiplier(); i++)
-    {
-        fmpz *a;
-        long len, bits;
-        mp_size_t limbs, limbs2;
+      mpz_init(a_m);
+      mpz_init(d_m);
+      mpz_init(r2_m);
+      
+      bits = n_randint(state, FLINT_D_BITS) + 1;
+      d = n_randbits(state, bits);
+      do
+      {
+         a = n_randint(state, d);
+      } while (n_gcd(d, a) != 1UL);
+      exp = n_randtest(state);
+      
+      dpre = n_precompute_inverse(d);
+      r1 = n_powmod_ui_precomp(a, exp, d, dpre);
 
-        len = n_randint(state, 100);
+      mpz_set_ui(a_m, a);
+      mpz_set_ui(d_m, d);
+      mpz_powm_ui(r2_m, a_m, exp, d_m);      
+      r2 = mpz_get_ui(r2_m);
+      
+      result = (r1 == r2);
+      if (!result)
+      {
+         printf("FAIL:\n");
+         printf("a = %lu, exp = %ld, d = %lu\n", a, exp, d); 
+         printf("r1 = %lu, r2 = %lu\n", r1, r2);
+         abort();
+      }
 
-        a = _fmpz_vec_init(len);
-        bits = n_randint(state, 200);
-        limbs = (bits + FLINT_BITS - 1) / FLINT_BITS;
-        _fmpz_vec_randtest(a, state, len, bits);
+      mpz_clear(a_m);
+      mpz_clear(d_m);
+      mpz_clear(r2_m);
+   }
 
-        limbs2 = _fmpz_vec_max_limbs(a, len);
+   flint_randclear(state);
 
-        result = (limbs >= limbs2);
-        if (!result)
-        {
-            printf("FAIL:\n");
-            printf("bits   = %ld\n", bits);
-            printf("limbs  = %ld\n", limbs);
-            printf("a      = {"), _fmpz_vec_print(a, len), printf("}\n");
-            printf("limbs2 = %ld\n", limbs2);
-            abort();
-        }
-
-        _fmpz_vec_clear(a, len);
-    }
-
-    flint_randclear(state);
-    _fmpz_cleanup();
-    printf("PASS\n");
-    return 0;
+   printf("PASS\n");
+   return 0;
 }
