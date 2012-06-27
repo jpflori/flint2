@@ -38,18 +38,18 @@ void _qadic_dense_inv(fmpz *rop, const fmpz *op, long len,
     }
     else if (N == 1)
     {
-        fmpz *P = _fmpz_vec_init(d + 1);
+        fmpz *P = _fmpz_vec_init(lenmod);
 
-        _fmpz_vec_set(P, mod, lenmod);
+        _fmpz_vec_scalar_mod_fmpz(P, mod, lenmod, p);
 
-        _fmpz_mod_poly_invmod(rop, op, len, P, d + 1, p);
+        _fmpz_mod_poly_invmod(rop, op, len, P, lenmod, p);
 
-        _fmpz_vec_clear(P, d + 1);
+        _fmpz_vec_clear(P, lenmod);
     }
     else  /* d, N >= 2 */
     {
         long *e, i, n;
-        fmpz *pow, *u;
+        fmpz *pow, *redmod, *u;
         fmpz *s, *t;
 
         n = FLINT_CLOG2(N) + 1;
@@ -59,15 +59,17 @@ void _qadic_dense_inv(fmpz *rop, const fmpz *op, long len,
         for (e[i = 0] = N; e[i] > 1; i++)
             e[i + 1] = (e[i] + 1) / 2;
 
-        pow = _fmpz_vec_init(n);
-        u   = _fmpz_vec_init(len * n);
-        s   = _fmpz_vec_init(2 * d - 1);
-        t   = _fmpz_vec_init(2 * d - 1);
+        pow    = _fmpz_vec_init(n);
+        redmod = _fmpz_vec_init(lenmod * n);
+        u      = _fmpz_vec_init(len * n);
+        s      = _fmpz_vec_init(2 * d - 1);
+        t      = _fmpz_vec_init(2 * d - 1);
 
-        /* Compute powers of p */
+        /* Compute powers of p and reduced moduli */
         {
             fmpz_one(t);
             fmpz_set(pow + i, p);
+            _fmpz_vec_scalar_mod_fmpz(redmod + i * lenmod, mod, lenmod, pow + i);
         }
         for (i--; i >= 1; i--)
         {
@@ -81,12 +83,14 @@ void _qadic_dense_inv(fmpz *rop, const fmpz *op, long len,
                 fmpz_mul(t, t, pow + (i + 1));
                 fmpz_mul(pow + i, pow + (i + 1), pow + (i + 1));
             }
+            _fmpz_vec_scalar_mod_fmpz(redmod + i * lenmod, mod, lenmod, pow + i);
         }
         {
             if (e[i] & 1L)
                 fmpz_mul(pow + i, t, pow + (i + 1));
             else
                 fmpz_mul(pow + i, pow + (i + 1), pow + (i + 1));
+            _fmpz_vec_scalar_mod_fmpz(redmod + i * lenmod, mod, lenmod, pow + i);
         }
 
         /* Compute reduced units */
@@ -101,28 +105,24 @@ void _qadic_dense_inv(fmpz *rop, const fmpz *op, long len,
         /* Run Newton iteration */
         i = n - 1;
         {
-            fmpz *P = _fmpz_vec_init(d + 1);
-
-            _fmpz_vec_set(P, mod, d + 1);
-
-            _fmpz_mod_poly_invmod(rop, u + i * len, len, P, d + 1, pow + i);
-
-            _fmpz_vec_clear(P, d + 1);
+            _fmpz_mod_poly_invmod(rop, u + i * len, len, redmod + i * lenmod, lenmod, pow + i);
         }
         for (i--; i >= 0; i--)  /* z' := 2 z - a z^2 */
         {
-            _fmpz_poly_sqr(s, rop, d);
-            _fmpz_poly_dense_reduce(t, s, 2 * d - 1, mod, lenmod);
+            _fmpz_mod_poly_sqr(s, rop, d, pow + i);
+            _fmpz_mod_poly_dense_reduce(t, s, 2 * d - 1, redmod + i * lenmod, lenmod, pow + i);
 
-            _fmpz_poly_mul(s, t, d, u + i * len, len);
-            _fmpz_poly_dense_reduce(t, s, d + len - 1, mod, lenmod);
+            _fmpz_mod_poly_mul(s, t, d, u + i * len, len, pow + i);
+            _fmpz_mod_poly_dense_reduce(t, s, d + len - 1, redmod + i * lenmod, lenmod, pow + i);
 
             _fmpz_vec_scalar_mul_2exp(rop, rop, d, 1);
-            _fmpz_poly_sub(rop, rop, d, t, d);
-            _fmpz_vec_scalar_mod_fmpz(rop, rop, d, pow + i);
+            _fmpz_mod_poly_sub(rop, rop, d, t, d, pow + i);
+            /* _fmpz_poly_sub(rop, rop, d, t, d);
+               _fmpz_vec_scalar_mod_fmpz(rop, rop, d, pow + i); */
         }
 
         _fmpz_vec_clear(pow, n);
+        _fmpz_vec_clear(redmod, lenmod * n);
         _fmpz_vec_clear(u, len * n);
         _fmpz_vec_clear(s, 2 * d - 1);
         _fmpz_vec_clear(t, 2 * d - 1);
