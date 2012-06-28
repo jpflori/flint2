@@ -104,6 +104,8 @@ static __inline__ void qadic_dense_clear(qadic_dense_t x)
 static __inline__ void
 _fmpz_poly_dense_reduce(fmpz* R, const fmpz *A, long lenA, const fmpz *B, long lenB)
 {
+    /* FMPZ_VEC_NORM(A, lenA); */
+
     if (lenA >= lenB)
     {
         _fmpz_poly_rem(R, A, lenA, B, lenB);
@@ -123,18 +125,17 @@ _fmpz_mod_poly_dense_reduce(fmpz* R,
 
     if (lenA >= lenB)
     {
-        _fmpz_poly_dense_reduce(R, A, lenA, B, lenB);
-        _fmpz_vec_scalar_mod_fmpz(R, R, lenA, p);
+        /* 1L should be replaced by a proper inverse of the leading coefficient... */
+        long one = 1L;
+        /* _fmpz_vec_scalar_mod_fmpz(A, A, lenA, p); */
+        _fmpz_mod_poly_rem(R, A, lenA, B, lenB, &one, p);
+        /*_fmpz_poly_dense_reduce(R, A, lenA, B, lenB);
+          _fmpz_vec_scalar_mod_fmpz(R, R, lenA, p);*/
     }
     else
     {
         _fmpz_vec_scalar_mod_fmpz(R, A, lenA, p);
     }
-    /* The following could also be used and 1L should be replaced by a proper inverse... */
-    /*if (lenA > lenB)
-    {
-        _fmpz_mod_poly_rem(R, A, lenA, B, lenB, (fmpz *) 1L, p);
-        }*/
 }
 
 static __inline__ void qadic_dense_reduce(qadic_dense_t x, const qadic_dense_ctx_t ctx)

@@ -87,14 +87,14 @@ void _qadic_dense_pow(fmpz *rop, const fmpz *op, long len, const fmpz_t e,
            We unroll the first step of the loop, referring to {op, len}
          */
 
-        /* _fmpz_mod_poly_sqr(u, op, len, p); */
-        _fmpz_poly_sqr(u, op, len);
+        _fmpz_mod_poly_sqr(u, op, len, p);
+        /* _fmpz_poly_sqr(u, op, len); */
         _fmpz_mod_poly_dense_reduce(R, u, 2 * len - 1, mod, lenmod, p);
 
         if (fmpz_tstbit(e, bit))
         {
-            /* _fmpz_mod_poly_mul(u, R, d, op, len, p); */
-            _fmpz_poly_mul(u, R, d, op, len);
+            _fmpz_mod_poly_mul(u, R, d, op, len, p);
+            /* _fmpz_poly_mul(u, R, d, op, len); */
             _fmpz_mod_poly_dense_reduce(S, u, d + len - 1, mod, lenmod, p);
             T = R;
             R = S;
@@ -105,17 +105,17 @@ void _qadic_dense_pow(fmpz *rop, const fmpz *op, long len, const fmpz_t e,
         {
             if (fmpz_tstbit(e, bit))
             {
-                /* _fmpz_mod_poly_sqr(u, R, d, p); */
-                _fmpz_poly_sqr(u, R, d);
+                _fmpz_mod_poly_sqr(u, R, d, p);
+                /* _fmpz_poly_sqr(u, R, d); */
                 _fmpz_mod_poly_dense_reduce(S, u, 2 * d - 1, mod, lenmod, p);
-                /* _fmpz_mod_poly_mul(u, S, d, op, len, p); */
-                _fmpz_poly_mul(u, S, d, op, len);
+                _fmpz_mod_poly_mul(u, S, d, op, len, p);
+                /* _fmpz_poly_mul(u, S, d, op, len); */
                 _fmpz_mod_poly_dense_reduce(R, u, d + len - 1, mod, lenmod, p);
             }
             else
             {
-                /* _fmpz_mod_poly_sqr(u, R, d, p); */
-                _fmpz_poly_sqr(u, R, d);
+                 _fmpz_mod_poly_sqr(u, R, d, p);
+                 /* _fmpz_poly_sqr(u, R, d); */
                 _fmpz_mod_poly_dense_reduce(S, u, 2 * d - 1, mod, lenmod, p);
                 T = R;
                 R = S;
