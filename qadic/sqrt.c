@@ -630,7 +630,7 @@ _qadic_sqrt_2(fmpz *rop, const fmpz *op, long len,
 {
     const long d    = j[lena - 1];
     const fmpz_t p  = {2L};
-    const fmpz_t p  = {4L};
+    const fmpz_t p4 = {4L};
     const fmpz_t p8 = {8L};
     int ans;
 
@@ -651,7 +651,7 @@ _qadic_sqrt_2(fmpz *rop, const fmpz *op, long len,
     _fmpz_mod_poly_sqrtmod_2(s, t, d, a, j, lena);    /* invsqrt(u) mod 2   */
     _fmpz_poly_sqr(c, s, d);
     _fmpz_poly_reduce(c, 2 * d - 1, a, j, lena);
-    _fmpz_poly_add(c, c, r, d);
+    _fmpz_poly_add(c, c, d, r, d);
     _fmpz_vec_scalar_mod_fmpz(c, c, d, p8);
     _fmpz_vec_scalar_fdiv_q_2exp(c, c, d, 2);         /* (1/u - s^2)/4 mod 2*/
 
@@ -696,7 +696,7 @@ _qadic_sqrt_2(fmpz *rop, const fmpz *op, long len,
         else  /* N >= 3 */
         {
             long *e, i, k, n;
-            fmpz *u;
+            fmpz *pow, *u;
             fmpz *r, *s, *t;
 
             n = FLINT_CLOG2(N - 2) + 1;
@@ -706,10 +706,17 @@ _qadic_sqrt_2(fmpz *rop, const fmpz *op, long len,
             for (e[i = 0] = N; e[i] > 3; i++)
                 e[i + 1] = (e[i] + 3) / 2;
 
+            pow = _fmpz_vec_init(n);
             u   = _fmpz_vec_init(len * n);
             r   = _fmpz_vec_init(2 * d - 1);
             s   = _fmpz_vec_init(2 * d - 1);
             t   = _fmpz_vec_init(2 * d - 1);
+
+            /* Compute powers of p */
+            for (i = 0; i < n; i++)
+            {
+                fmpz_mul_2exp(pow + i, p, e[i]);
+            }
 
             /* Compute reduced units */
             {
@@ -774,6 +781,7 @@ _qadic_sqrt_2(fmpz *rop, const fmpz *op, long len,
 
           exit:
 
+            _fmpz_vec_clear(pow, n);
             _fmpz_vec_clear(u, len * n);
             _fmpz_vec_clear(r, 2 * d - 1);
             _fmpz_vec_clear(s, 2 * d - 1);
