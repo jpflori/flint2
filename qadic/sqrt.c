@@ -630,7 +630,7 @@ _qadic_sqrt_2(fmpz *rop, const fmpz *op, long len,
 {
     const long d    = j[lena - 1];
     const fmpz_t p  = {2L};
-    const fmpz_t p4 = {4L};
+    const fmpz_t p4  = {4L};
     const fmpz_t p8 = {8L};
     int ans;
 
@@ -695,9 +695,8 @@ _qadic_sqrt_2(fmpz *rop, const fmpz *op, long len,
         }
         else  /* N >= 3 */
         {
-            long *e, i, k, n;
-            fmpz *pow, *u;
-            fmpz *r, *s, *t;
+            long *e, i, n;
+            fmpz *u;
 
             n = FLINT_CLOG2(N - 2) + 1;
 
@@ -708,9 +707,6 @@ _qadic_sqrt_2(fmpz *rop, const fmpz *op, long len,
 
             pow = _fmpz_vec_init(n);
             u   = _fmpz_vec_init(len * n);
-            r   = _fmpz_vec_init(2 * d - 1);
-            s   = _fmpz_vec_init(2 * d - 1);
-            t   = _fmpz_vec_init(2 * d - 1);
 
             /* Compute powers of p */
             for (i = 0; i < n; i++)
@@ -720,44 +716,29 @@ _qadic_sqrt_2(fmpz *rop, const fmpz *op, long len,
 
             /* Compute reduced units */
             {
-                _fmpz_vec_scalar_mod_fmpz(u + 0 * len, op, len, pow + 0);
+                _fmpz_vec_scalar_fdiv_r_2exp(u + 0 * len, op, len, e[0]);
             }
             for (i = 1; i < n; i++)
             {
-                _fmpz_vec_scalar_mod_fmpz(u + i * len, u + (i - 1) * len, len, pow + i);
+                _fmpz_vec_scalar_r_2exp(u + i * len, u + (i - 1) * len, len, e[i]);
             }
 
             /* Run Newton iteration */
-            i = n - 1;
             {
-                ans = _fmpz_mod_poly_sqrtmod_p(t, u + i * len, len, a, j, lena, p);
-                if (!ans)
-                    goto exit;
-
-                /* Dense copy of f, used for inversion */
-                for (k = 0; k < lena; k++)
-                    fmpz_set(s + j[k], a + k);
-                _fmpz_mod_poly_invmod(rop, t, d, s, d + 1, p);
+                _fmpz_vec_set(rop, s, d);
             }
-            for (i--; i >= 1; i--)  /* z := z - z (a z^2 - 1) / 2 */
+            for (i = n - 1; i >= 1; i--)  /* z := z - z (a z^2 - 1) / 2 */ /* XXX */
             {
                 _fmpz_poly_sqr(s, rop, d);
                 _fmpz_poly_reduce(s, 2 * d - 1, a, j, lena);
                 _fmpz_poly_mul(t, s, d, u + i * len, len);
                 _fmpz_poly_reduce(t, d + len - 1, a, j, lena);
                 fmpz_sub_ui(t, t, 1);
-
-                for (k = 0; k < d; k++)
-                {
-                    if (fmpz_is_odd(t + k))
-                        fmpz_add(t + k, t + k, pow + i);
-                    fmpz_fdiv_q_2exp(t + k, t + k, 1);
-                }
-
+                _fmpz_vec_scalar_fdiv_r_2exp(t, t, d, 1);
                 _fmpz_poly_mul(s, t, d, rop, d);
                 _fmpz_poly_reduce(s, 2 * d - 1, a, j, lena);
                 _fmpz_poly_sub(rop, rop, d, s, d);
-                _fmpz_vec_scalar_mod_fmpz(rop, rop, d, pow + i);
+                _fmpz_vec_scalar_fdiv_r_2exp(rop, rop, d, e[i]);
             }
             {
                 _fmpz_poly_mul(s, rop, d, u + 1 * len, len);
@@ -765,30 +746,15 @@ _qadic_sqrt_2(fmpz *rop, const fmpz *op, long len,
                 _fmpz_poly_sqr(t, s, d);
                 _fmpz_poly_reduce(t, 2 * d - 1, a, j, lena);
                 _fmpz_poly_sub(t, u + 0 * len, len, t, d);
-
-                for (k = 0; k < d; k++)
-                {
-                    if (fmpz_is_odd(t + k))
-                        fmpz_add(t + k, t + k, pow + 0);
-                    fmpz_fdiv_q_2exp(t + k, t + k, 1);
-                }
-
+                _fmpz_vec_scalar_fdiv_q_2exp(t, t, d, 1);
                 _fmpz_poly_mul(r, rop, d, t, d);
                 _fmpz_poly_reduce(r, 2 * d - 1, a, j, lena);
                 _fmpz_poly_add(rop, r, d, s, d);
-                _fmpz_vec_scalar_mod_fmpz(rop, rop, d, pow + 0);
+                _fmpz_vec_scalar_fdiv_r_2exp(rop, rop, d, e[0]);
             }
 
-          exit:
-
-            _fmpz_vec_clear(pow, n);
             _fmpz_vec_clear(u, len * n);
-            _fmpz_vec_clear(r, 2 * d - 1);
-            _fmpz_vec_clear(s, 2 * d - 1);
-            _fmpz_vec_clear(t, 2 * d - 1);
             flint_free(e);
-
-            return ans;
         }
     }
 
