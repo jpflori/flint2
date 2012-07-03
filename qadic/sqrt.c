@@ -713,7 +713,7 @@ _qadic_sqrt_2(fmpz *rop, const fmpz *op, long len,
             }
             for (i = 1; i < n; i++)
             {
-                _fmpz_vec_scalar_r_2exp(u + i * len, u + (i - 1) * len, len, e[i]);
+                _fmpz_vec_scalar_fdiv_r_2exp(u + i * len, u + (i - 1) * len, len, e[i]);
             }
 
             /* Run Newton iteration */
