@@ -19,7 +19,8 @@
 =============================================================================*/
 /******************************************************************************
 
-    Copyright (C) 2010 Fredrik Johansson
+    Copyright (C) 2011 Fredrik Johansson
+    Copyright (C) 2012 Sebastian Pancratz
 
 ******************************************************************************/
 
@@ -37,63 +38,51 @@ main(void)
     long m, n, rep;
     flint_rand_t state;
 
-    printf("transpose....");
+    printf("charpoly....");
     fflush(stdout);
 
     flint_randinit(state);
 
-    /* Rectangular transpose */
-    for (rep = 0; rep < 100 * flint_test_multiplier(); rep++)
+    for (rep = 0; rep < 1000 * flint_test_multiplier(); rep++)
     {
-        fmpz_mat_t A, B, C;
+        fmpz_mat_t A, B, C, D;
+        fmpz_poly_t f, g;
 
-        m = n_randint(state, 20);
-        n = n_randint(state, 20);
+        m = n_randint(state, 4);
+        n = m;
 
         fmpz_mat_init(A, m, n);
-        fmpz_mat_init(B, n, m);
-        fmpz_mat_init(C, m, n);
+        fmpz_mat_init(B, m, n);
+        fmpz_mat_init(C, m, m);
+        fmpz_mat_init(D, n, n);
+        fmpz_poly_init(f);
+        fmpz_poly_init(g);
 
-        fmpz_mat_randtest(A, state, 1+n_randint(state, 100));
-        fmpz_mat_randtest(B, state, 1+n_randint(state, 100));
+        fmpz_mat_randtest(A, state, 10);
+        fmpz_mat_randtest(B, state, 10);
 
-        fmpz_mat_transpose(B, A);
-        fmpz_mat_transpose(C, B);
+        fmpz_mat_mul(C, A, B);
+        fmpz_mat_mul(D, B, A);
 
-        if (!fmpz_mat_equal(C, A))
+        fmpz_mat_charpoly(f, C);
+        fmpz_mat_charpoly(g, D);
+
+        if (!fmpz_poly_equal(f, g))
         {
-            printf("FAIL: C != A\n");
+            printf("FAIL: charpoly(AB) != charpoly(BA).\n");
+            printf("Matrix A:\n"), fmpz_mat_print(A), printf("\n");
+            printf("Matrix B:\n"), fmpz_mat_print(B), printf("\n");
+            printf("cp(AB) = "), fmpz_poly_print_pretty(f, "X"), printf("\n");
+            printf("cp(BA) = "), fmpz_poly_print_pretty(g, "X"), printf("\n");
             abort();
         }
 
         fmpz_mat_clear(A);
         fmpz_mat_clear(B);
         fmpz_mat_clear(C);
-    }
-
-    /* Self-transpose */
-    for (rep = 0; rep < 1000; rep++)
-    {
-        fmpz_mat_t A, B;
-
-        m = n_randint(state, 20);
-
-        fmpz_mat_init(A, m, m);
-        fmpz_mat_init(B, m, m);
-
-        fmpz_mat_randtest(A, state, 1+n_randint(state, 100));
-        fmpz_mat_set(B, A);
-        fmpz_mat_transpose(B, B);
-        fmpz_mat_transpose(B, B);
-
-        if (!fmpz_mat_equal(B, A))
-        {
-            printf("FAIL: B != A\n");
-            abort();
-        }
-
-        fmpz_mat_clear(A);
-        fmpz_mat_clear(B);
+        fmpz_mat_clear(D);
+        fmpz_poly_clear(f);
+        fmpz_poly_clear(g);
     }
 
     flint_randclear(state);

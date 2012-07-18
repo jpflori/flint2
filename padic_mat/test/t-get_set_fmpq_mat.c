@@ -19,7 +19,7 @@
 =============================================================================*/
 /******************************************************************************
 
-    Copyright (C) 2010 Fredrik Johansson
+    Copyright (C) 2011, 2012 Sebastian Pancratz
 
 ******************************************************************************/
 
@@ -27,77 +27,71 @@
 #include <stdlib.h>
 #include <mpir.h>
 #include "flint.h"
-#include "fmpz.h"
-#include "fmpz_mat.h"
 #include "ulong_extras.h"
+#include "long_extras.h"
+#include "padic.h"
+#include "padic_mat.h"
 
 int
 main(void)
 {
-    long m, n, rep;
+    int i, result;
     flint_rand_t state;
 
-    printf("transpose....");
+    printf("get/ set_fmpq_mat... ");
     fflush(stdout);
 
     flint_randinit(state);
 
-    /* Rectangular transpose */
-    for (rep = 0; rep < 100 * flint_test_multiplier(); rep++)
+    /* Qp -> QQ -> Qp */
+    for (i = 0; i < 1000; i++)
     {
-        fmpz_mat_t A, B, C;
+        fmpz_t p;
+        long N;
+        padic_ctx_t ctx;
+        long m, n;
 
-        m = n_randint(state, 20);
-        n = n_randint(state, 20);
+        padic_mat_t a, c;
+        fmpq_mat_t b;
 
-        fmpz_mat_init(A, m, n);
-        fmpz_mat_init(B, n, m);
-        fmpz_mat_init(C, m, n);
+        fmpz_init(p);
+        fmpz_set_ui(p, n_randprime(state, 5, 1));
+        N = z_randint(state, 50);
+        padic_ctx_init(ctx, p, N, PADIC_SERIES);
 
-        fmpz_mat_randtest(A, state, 1+n_randint(state, 100));
-        fmpz_mat_randtest(B, state, 1+n_randint(state, 100));
+        m = n_randint(state, 10);
+        n = n_randint(state, 10);
 
-        fmpz_mat_transpose(B, A);
-        fmpz_mat_transpose(C, B);
+        padic_mat_init(a, m, n);
+        padic_mat_init(c, m, n);
+        fmpq_mat_init(b, m, n);
 
-        if (!fmpz_mat_equal(C, A))
+        padic_mat_randtest(a, state, ctx);
+        padic_mat_get_fmpq_mat(b, a, ctx);
+        padic_mat_set_fmpq_mat(c, b, ctx);
+
+        result = (padic_mat_equal(a, c) && _padic_mat_is_canonical(a, p));
+
+        if (!result)
         {
-            printf("FAIL: C != A\n");
+            printf("FAIL:\n\n");
+            printf("a = "), padic_mat_print(a, ctx), printf("\n");
+            printf("c = "), padic_mat_print(c, ctx), printf("\n");
+            printf("b = "), fmpq_mat_print(b), printf("\n");
             abort();
         }
 
-        fmpz_mat_clear(A);
-        fmpz_mat_clear(B);
-        fmpz_mat_clear(C);
-    }
+        padic_mat_clear(a);
+        padic_mat_clear(c);
+        fmpq_mat_clear(b);
 
-    /* Self-transpose */
-    for (rep = 0; rep < 1000; rep++)
-    {
-        fmpz_mat_t A, B;
-
-        m = n_randint(state, 20);
-
-        fmpz_mat_init(A, m, m);
-        fmpz_mat_init(B, m, m);
-
-        fmpz_mat_randtest(A, state, 1+n_randint(state, 100));
-        fmpz_mat_set(B, A);
-        fmpz_mat_transpose(B, B);
-        fmpz_mat_transpose(B, B);
-
-        if (!fmpz_mat_equal(B, A))
-        {
-            printf("FAIL: B != A\n");
-            abort();
-        }
-
-        fmpz_mat_clear(A);
-        fmpz_mat_clear(B);
+        fmpz_clear(p);
+        padic_ctx_clear(ctx);
     }
 
     flint_randclear(state);
     _fmpz_cleanup();
     printf("PASS\n");
-    return 0;
+    return EXIT_SUCCESS;
 }
+

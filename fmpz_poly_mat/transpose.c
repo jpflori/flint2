@@ -20,23 +20,22 @@
 /******************************************************************************
 
     Copyright (C) 2010 Fredrik Johansson
+    Copyright (C) 2012 Sebastian Pancratz
 
 ******************************************************************************/
 
 #include <stdlib.h>
-#include "flint.h"
-#include "fmpz.h"
-#include "fmpz_mat.h"
+#include "fmpz_poly_mat.h"
 
 void
-fmpz_mat_transpose(fmpz_mat_t B, const fmpz_mat_t A)
+fmpz_poly_mat_transpose(fmpz_poly_mat_t B, const fmpz_poly_mat_t A)
 {
     fmpz tmp;
     long i, j;
 
     if (B->r != A->c || B->c != A->r)
     {
-        printf("Exception (fmpz_mat_transpose):  Incompatible dimensions.\n");
+        printf("Exception (fmpz_poly_mat_transpose):  Incompatible dimensions.\n");
         abort();
     }
 
@@ -44,16 +43,14 @@ fmpz_mat_transpose(fmpz_mat_t B, const fmpz_mat_t A)
     {
         for (i = 0; i < A->r - 1; i++)
             for (j = i + 1; j < A->c; j++)
-            {
-                tmp = A->rows[i][j];
-                A->rows[i][j] = A->rows[j][i];
-                A->rows[j][i] = tmp;
-            }
+                fmpz_poly_swap(fmpz_poly_mat_entry(B, i, j), 
+                               fmpz_poly_mat_entry(B, j, i));
     }
     else  /* Not aliased; general case */
     {
         for (i = 0; i < B->r; i++)
             for (j = 0; j < B->c; j++)
-                fmpz_set(&B->rows[i][j], &A->rows[j][i]);
+                fmpz_poly_set(fmpz_poly_mat_entry(B, i, j), 
+                              fmpz_poly_mat_entry(A, j, i));
     }
 }
