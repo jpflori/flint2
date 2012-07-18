@@ -38,15 +38,22 @@ void padic_poly_reduce(padic_poly_t poly, const padic_ctx_t ctx)
         }
         else
         {
-            fmpz_t pow;
-            int alloc;
+            if (!COEFF_IS_MPZ(*ctx->p) && *ctx->p == 2L)
+            {
+                _fmpz_vec_scalar_fdiv_r_2exp(poly->coeffs, poly->coeffs, poly->length, ctx->N);
+            }
+            else
+            {
+                fmpz_t pow;
+                int alloc;
 
-            alloc = _padic_ctx_pow_ui(pow, ctx->N - poly->val, ctx);
+                alloc = _padic_ctx_pow_ui(pow, ctx->N - poly->val, ctx);
 
-            _fmpz_vec_scalar_mod_fmpz(poly->coeffs, poly->coeffs, poly->length, pow);
+                _fmpz_vec_scalar_mod_fmpz(poly->coeffs, poly->coeffs, poly->length, pow);
 
-            if (alloc)
-                fmpz_clear(pow);
+                if (alloc)
+                    fmpz_clear(pow);
+            }
 
             _padic_poly_normalise(poly);
 

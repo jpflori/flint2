@@ -36,19 +36,28 @@ void _padic_poly_scalar_mul_padic(fmpz *rop, long *rval,
     }
     else
     {
-        fmpz_t pow;
-        int alloc;
-
         *rval = val + padic_val(c);
 
-        alloc = _padic_ctx_pow_ui(pow, ctx->N - *rval, ctx);
+        if (!COEFF_IS_MPZ(*ctx->p) && *ctx->p == 2L)
+        {
+            _fmpz_vec_scalar_mul_fmpz(rop, op, len, padic_unit(c));
 
-        _fmpz_vec_scalar_mul_fmpz(rop, op, len, padic_unit(c));
+            _fmpz_vec_scalar_fdiv_r_2exp(rop, rop, len, ctx->N - *rval);
+        }
+        else
+        {
+            fmpz_t pow;
+            int alloc;
 
-        _fmpz_vec_scalar_mod_fmpz(rop, rop, len, pow);
+            alloc = _padic_ctx_pow_ui(pow, ctx->N - *rval, ctx);
 
-        if (alloc)
-            fmpz_clear(pow);    
+            _fmpz_vec_scalar_mul_fmpz(rop, op, len, padic_unit(c));
+
+            _fmpz_vec_scalar_mod_fmpz(rop, rop, len, pow);
+
+            if (alloc)
+                fmpz_clear(pow);
+        }
     }
 }
 
