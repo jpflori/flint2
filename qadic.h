@@ -123,7 +123,7 @@ static __inline__ void qadic_clear(qadic_t x)
  */
 
 static __inline__ void
-_fmpz_poly_reduce(fmpz *R, long lenR, const fmpz *a, const long *j, long len)
+_qadic_reduce_no_mod(fmpz *R, long lenR, const fmpz *a, const long *j, long len)
 {
     const long d = j[len - 1];
     long i, k;
@@ -145,14 +145,14 @@ _fmpz_poly_reduce(fmpz *R, long lenR, const fmpz *a, const long *j, long len)
  */
 
 static __inline__ void 
-_fmpz_mod_poly_reduce(fmpz *R, long lenR, 
+_qadic_reduce(fmpz *R, long lenR, 
                       const fmpz *a, const long *j, long len, const fmpz_t p)
 {
     const long d = j[len - 1];
 
     if (lenR > d)
     {
-        _fmpz_poly_reduce(R, lenR, a, j, len);
+        _qadic_reduce_no_mod(R, lenR, a, j, len);
         _fmpz_vec_scalar_mod_fmpz(R, R, d, p);
     }
     else
@@ -177,7 +177,7 @@ static __inline__ void qadic_reduce(qadic_t x, const qadic_ctx_t ctx)
 
         alloc = _padic_ctx_pow_ui(pow, (&ctx->pctx)->N - x->val, &ctx->pctx);
 
-        _fmpz_mod_poly_reduce(x->coeffs, x->length, ctx->a, ctx->j, ctx->len, pow);
+        _qadic_reduce(x->coeffs, x->length, ctx->a, ctx->j, ctx->len, pow);
         _padic_poly_set_length(x, FLINT_MIN(x->length, d));
         _padic_poly_normalise(x);
         padic_poly_canonicalise(x, (&ctx->pctx)->p);

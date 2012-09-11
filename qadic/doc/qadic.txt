@@ -112,7 +112,7 @@ void qadic_clear(qadic_t rop)
 
     Clears the element \code{rop}.
 
-void _fmpz_poly_reduce(fmpz *R, long lenR, 
+void _qadic_reduce_no_mod(fmpz *R, long lenR, 
                        const fmpz *a, const long *j, long len)
 
     Reduces a polynomial \code{(R, lenR)} modulo a sparse monic 
@@ -124,7 +124,7 @@ void _fmpz_poly_reduce(fmpz *R, long lenR,
 
     Allows zero-padding in \code{(R, lenR)}.
 
-void _fmpz_mod_poly_reduce(fmpz *R, long lenR, 
+void _qadic_reduce(fmpz *R, long lenR, 
     const fmpz *a, const long *j, long len, const fmpz_t p)
 
     Reduces a polynomial \code{(R, lenR)} modulo a sparse monic 

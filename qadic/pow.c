@@ -87,12 +87,12 @@ void _qadic_pow(fmpz *rop, const fmpz *op, long len, const fmpz_t e,
          */
 
         _fmpz_poly_sqr(R, op, len);
-        _fmpz_mod_poly_reduce(R, 2 * len - 1, a, j, lena, p);
+        _qadic_reduce(R, 2 * len - 1, a, j, lena, p);
 
         if (fmpz_tstbit(e, bit))
         {
             _fmpz_poly_mul(S, R, d, op, len);
-            _fmpz_mod_poly_reduce(S, d + len - 1, a, j, lena, p);
+            _qadic_reduce(S, d + len - 1, a, j, lena, p);
             T = R;
             R = S;
             S = T;
@@ -103,14 +103,14 @@ void _qadic_pow(fmpz *rop, const fmpz *op, long len, const fmpz_t e,
             if (fmpz_tstbit(e, bit))
             {
                 _fmpz_poly_sqr(S, R, d);
-                _fmpz_mod_poly_reduce(S, 2 * d - 1, a, j, lena, p);
+                _qadic_reduce(S, 2 * d - 1, a, j, lena, p);
                 _fmpz_poly_mul(R, S, d, op, len);
-                _fmpz_mod_poly_reduce(R, d + len - 1, a, j, lena, p);
+                _qadic_reduce(R, d + len - 1, a, j, lena, p);
             }
             else
             {
                 _fmpz_poly_sqr(S, R, d);
-                _fmpz_mod_poly_reduce(S, 2 * d - 1, a, j, lena, p);
+                _qadic_reduce(S, 2 * d - 1, a, j, lena, p);
                 T = R;
                 R = S;
                 S = T;

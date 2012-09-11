@@ -37,7 +37,7 @@ void _qadic_mul(fmpz *rop,
                 const fmpz *a, const long *j, long lena, const fmpz_t pN)
 {
     _fmpz_poly_mul(rop, op1, len1, op2, len2);
-    _fmpz_mod_poly_reduce(rop, len1 + len2 - 1, a, j, lena, pN);
+    _qadic_reduce(rop, len1 + len2 - 1, a, j, lena, pN);
 }
 
 void qadic_mul(qadic_t x, const qadic_t y, const qadic_t z, 

@@ -72,7 +72,7 @@ void _qadic_exp_rectangular(fmpz *rop, const fmpz *op, long v, long len,
                         fmpz_add(rop + i, rop + i, pN);
             }
             _fmpz_vec_scalar_fdiv_q_2exp(rop, rop, 2 * len - 1, 1);
-            _fmpz_mod_poly_reduce(rop, 2 * len - 1, a, j, lena, pN);
+            _qadic_reduce(rop, 2 * len - 1, a, j, lena, pN);
             _fmpz_vec_zero(rop + (2 * len - 1), d - (2 * len - 1));
             _fmpz_mod_poly_add(rop, rop, d, x, len, pN);
             fmpz_add_ui(rop, rop, 1);
@@ -110,7 +110,7 @@ void _qadic_exp_rectangular(fmpz *rop, const fmpz *op, long v, long len,
         for (i = 2; i <= b; i++)
         {
             _fmpz_mod_poly_mul(x + i * d, x + (i - 1) * d, d, x + d, d, pNk);
-            _fmpz_mod_poly_reduce(x + i * d, 2 * d - 1, a, j, lena, pNk);
+            _qadic_reduce(x + i * d, 2 * d - 1, a, j, lena, pNk);
         }
 
         _fmpz_vec_zero(rop, d);
@@ -132,7 +132,7 @@ void _qadic_exp_rectangular(fmpz *rop, const fmpz *op, long v, long len,
             }
 
             _fmpz_poly_mul(t, x + b * d, d, rop, d);
-            _fmpz_mod_poly_reduce(t, 2 * d - 1, a, j, lena, pNk);
+            _qadic_reduce(t, 2 * d - 1, a, j, lena, pNk);
             _fmpz_vec_scalar_mul_fmpz(rop, s, d, f);
             _fmpz_vec_add(rop, rop, t, d);
             _fmpz_vec_scalar_mod_fmpz(rop, rop, d, pNk);
