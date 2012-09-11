@@ -35,6 +35,7 @@
 #include "flint.h"
 #include "fmpz.h"
 #include "nmod_mat.h"
+#include "fmpz_poly.h"
 
 #ifdef __cplusplus
  extern "C" {
@@ -208,6 +209,11 @@ long fmpz_mat_fflu(fmpz_mat_t B, fmpz_t den, long * perm,
 
 long fmpz_mat_rref(fmpz_mat_t B, fmpz_t den, const fmpz_mat_t A);
 
+/* Modular gaussian elimination *********************************************/
+
+long
+fmpz_mat_rref_mod(long * perm, fmpz_mat_t A, const fmpz_t p);
+
 /* Trace ********************************************************************/
 
 void fmpz_mat_trace(fmpz_t trace, const fmpz_mat_t mat);
@@ -233,6 +239,11 @@ void fmpz_mat_det_modular_given_divisor(fmpz_t det, const fmpz_mat_t A,
 
 void fmpz_mat_det_bound(fmpz_t bound, const fmpz_mat_t A);
 void fmpz_mat_det_divisor(fmpz_t d, const fmpz_mat_t A);
+
+/* Characteristic polynomial ************************************************/
+
+void _fmpz_mat_charpoly(fmpz *cp, const fmpz_mat_t mat);
+void fmpz_mat_charpoly(fmpz_poly_t cp, const fmpz_mat_t mat);
 
 /* Rank *********************************************************************/
 
