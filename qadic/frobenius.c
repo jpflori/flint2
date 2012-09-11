@@ -36,7 +36,7 @@
  */
 
 static void 
-_fmpz_mod_poly_compose_mod_rectangular(fmpz *rop, 
+_qadic_compose_mod_rectangular(fmpz *rop, 
                            const fmpz *op1, long len1, 
                            const fmpz *op2, long len2, 
                            const fmpz *a, const long *j, long lena, 
@@ -63,7 +63,7 @@ _fmpz_mod_poly_compose_mod_rectangular(fmpz *rop,
         for (i = 2; i <= B; i++)
         {
             _fmpz_poly_mul(pows + i * d, pows + (i - 1) * d, d, op2, len2);
-            _fmpz_poly_reduce(pows + i * d, d + len2 - 1, a, j, lena);
+            _qadic_reduce_no_mod(pows + i * d, d + len2 - 1, a, j, lena);
             _fmpz_vec_scalar_mod_fmpz(pows + i * d, pows + i * d, d, p);
         }
 
@@ -72,7 +72,7 @@ _fmpz_mod_poly_compose_mod_rectangular(fmpz *rop,
         for (i = (len1 + B - 1) / B - 1; i >= 0; i--)
         {
             _fmpz_poly_mul(t, rop, d, pows + B * d, d);
-            _fmpz_poly_reduce(t, 2 * d - 1, a, j, lena);
+            _qadic_reduce_no_mod(t, 2 * d - 1, a, j, lena);
 
             _fmpz_vec_set(rop, t, d);
             fmpz_add(rop + 0, rop + 0, op1 + i*B);
@@ -90,7 +90,7 @@ _fmpz_mod_poly_compose_mod_rectangular(fmpz *rop,
 }
 
 static void 
-_fmpz_mod_poly_compose_mod_horner(fmpz *rop, 
+_qadic_compose_mod_horner(fmpz *rop, 
                            const fmpz *op1, long len1, 
                            const fmpz *op2, long len2, 
                            const fmpz *a, const long *j, long lena, 
@@ -120,7 +120,7 @@ _fmpz_mod_poly_compose_mod_horner(fmpz *rop,
         for (i = len1 - 1; i >= 0; i--)
         {
             _fmpz_poly_mul(t, rop, d, op2, len2);
-            _fmpz_poly_reduce(t, d + len2 - 1, a, j, lena);
+            _qadic_reduce_no_mod(t, d + len2 - 1, a, j, lena);
             _fmpz_poly_add(rop, t, d, op1 + i, 1);
             _fmpz_vec_scalar_mod_fmpz(rop, rop, d, p);
         }
@@ -142,8 +142,8 @@ _fmpz_mod_poly_compose_mod_horner(fmpz *rop,
     Does not support aliasing.
  */
 
-static void 
-_fmpz_mod_poly_compose_mod(fmpz *rop, 
+void 
+_qadic_compose_mod(fmpz *rop, 
                            const fmpz *op1, long len1, 
                            const fmpz *op2, long len2, 
                            const fmpz *a, const long *j, long lena, 
@@ -151,11 +151,11 @@ _fmpz_mod_poly_compose_mod(fmpz *rop,
 {
     if (len1 < 6)
     {
-        _fmpz_mod_poly_compose_mod_horner(rop, op1, len1, op2, len2, a, j, lena, p);
+        _qadic_compose_mod_horner(rop, op1, len1, op2, len2, a, j, lena, p);
     }
     else
     {
-        _fmpz_mod_poly_compose_mod_rectangular(rop, op1, len1, op2, len2, a, j, lena, p);
+        _qadic_compose_mod_rectangular(rop, op1, len1, op2, len2, a, j, lena, p);
     }
 }
 
@@ -223,27 +223,27 @@ void _qadic_frobenius_a(fmpz *rop, long exp,
 
         fmpz_pow_ui(t, p, exp);
         _qadic_pow(rop, op, 2, t, a, j, lena, pow + i);
-        _fmpz_mod_poly_compose_mod(t, f2, d, rop, d, a, j, lena, pow + i);
+        _qadic_compose_mod(t, f2, d, rop, d, a, j, lena, pow + i);
         _qadic_inv(inv, t, d, a, j, lena, p, 1);
     }
     for (i--; i >= 0; i--)
     {
-        _fmpz_mod_poly_compose_mod(s, f1, d + 1, rop, d, a, j, lena, pow + i);
+        _qadic_compose_mod(s, f1, d + 1, rop, d, a, j, lena, pow + i);
         _fmpz_mod_poly_mul(t, s, d, inv, d, pow + i);
-        _fmpz_mod_poly_reduce(t, 2*d - 1, a, j, lena, pow + i);
+        _qadic_reduce(t, 2*d - 1, a, j, lena, pow + i);
         _fmpz_mod_poly_sub(rop, rop, d, t, d, pow + i);
 
         if (i > 0)
         {
-            _fmpz_mod_poly_compose_mod(s, f2, d, rop, d, a, j, lena, pow + i);
+            _qadic_compose_mod(s, f2, d, rop, d, a, j, lena, pow + i);
             _fmpz_mod_poly_mul(t, inv, d, s, d, pow + i);
-            _fmpz_mod_poly_reduce(t, 2*d - 1, a, j, lena, pow + i);
+            _qadic_reduce(t, 2*d - 1, a, j, lena, pow + i);
             fmpz_sub_ui(t, t, 2);
             if (fmpz_sgn(t) < 0)
                 fmpz_add(t, t, pow + i);
             _fmpz_mod_poly_neg(t, t, d, pow + i);
             _fmpz_mod_poly_mul(s, inv, d, t, d, pow + i);
-            _fmpz_mod_poly_reduce(s, 2*d - 1, a, j, lena, pow + i);
+            _qadic_reduce(s, 2*d - 1, a, j, lena, pow + i);
 
             /* SWAP(inv, s).  Requires the arrays to be of the same size. */
             {
@@ -265,6 +265,11 @@ void _qadic_frobenius_a(fmpz *rop, long exp,
     flint_free(e);
 }
 
+/*
+    Sets (rop, 2d-1) to the image of (op, len) under the Frobenius operator 
+    raised to the e-th power.
+ */
+
 void _qadic_frobenius(fmpz *rop, const fmpz *op, long len, long e, 
                   const fmpz *a, const long *j, long lena, 
                   const fmpz_t p, long N)
@@ -274,7 +279,7 @@ void _qadic_frobenius(fmpz *rop, const fmpz *op, long len, long e,
     if (len == 1)  /* op is in Zp, not just Zq */
     {
         _fmpz_vec_set(rop, op, len);
-        _fmpz_vec_zero(rop + len, d - len);
+        _fmpz_vec_zero(rop + len, (2*d - 1)  - len);
     }
     else if (N == 1)
     {
@@ -296,7 +301,7 @@ void _qadic_frobenius(fmpz *rop, const fmpz *op, long len, long e,
 
         _qadic_frobenius_a(t, e, a, j, lena, p, N);
 
-        _fmpz_mod_poly_compose_mod(rop, op, len, t, d, a, j, lena, pow);
+        _qadic_compose_mod(rop, op, len, t, d, a, j, lena, pow);
         _fmpz_vec_zero(rop + d, d - 1);
 
         _fmpz_vec_clear(t, 2*d - 1);

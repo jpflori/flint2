@@ -19,7 +19,7 @@
 =============================================================================*/
 /******************************************************************************
 
-    Copyright (C) 2011 Sebastian Pancratz
+    Copyright (C) 2011, 2012 Sebastian Pancratz
  
 ******************************************************************************/
 
@@ -46,6 +46,8 @@
 #define qadic_t padic_poly_t
 
 #define qadic_struct padic_poly_struct
+
+#define qadic_val(op) ((op)->val)
 
 typedef struct
 {
@@ -121,7 +123,7 @@ static __inline__ void qadic_clear(qadic_t x)
  */
 
 static __inline__ void
-_fmpz_poly_reduce(fmpz *R, long lenR, const fmpz *a, const long *j, long len)
+_qadic_reduce_no_mod(fmpz *R, long lenR, const fmpz *a, const long *j, long len)
 {
     const long d = j[len - 1];
     long i, k;
@@ -143,14 +145,14 @@ _fmpz_poly_reduce(fmpz *R, long lenR, const fmpz *a, const long *j, long len)
  */
 
 static __inline__ void 
-_fmpz_mod_poly_reduce(fmpz *R, long lenR, 
+_qadic_reduce(fmpz *R, long lenR, 
                       const fmpz *a, const long *j, long len, const fmpz_t p)
 {
     const long d = j[len - 1];
 
     if (lenR > d)
     {
-        _fmpz_poly_reduce(R, lenR, a, j, len);
+        _qadic_reduce_no_mod(R, lenR, a, j, len);
         _fmpz_vec_scalar_mod_fmpz(R, R, d, p);
     }
     else
@@ -175,7 +177,7 @@ static __inline__ void qadic_reduce(qadic_t x, const qadic_ctx_t ctx)
 
         alloc = _padic_ctx_pow_ui(pow, (&ctx->pctx)->N - x->val, &ctx->pctx);
 
-        _fmpz_mod_poly_reduce(x->coeffs, x->length, ctx->a, ctx->j, ctx->len, pow);
+        _qadic_reduce(x->coeffs, x->length, ctx->a, ctx->j, ctx->len, pow);
         _padic_poly_set_length(x, FLINT_MIN(x->length, d));
         _padic_poly_normalise(x);
         padic_poly_canonicalise(x, (&ctx->pctx)->p);
@@ -228,11 +230,6 @@ qadic_randtest_int(qadic_t x, flint_rand_t state, const qadic_ctx_t ctx)
 
 /* Assignments and conversions ***********************************************/
 
-static __inline__ void qadic_set(qadic_t x, const qadic_t y)
-{
-    padic_poly_set(x, y);
-}
-
 static __inline__ void qadic_zero(qadic_t x)
 {
     padic_poly_zero(x);
@@ -241,6 +238,38 @@ static __inline__ void qadic_zero(qadic_t x)
 static __inline__ void qadic_one(qadic_t x, const qadic_ctx_t ctx)
 {
     padic_poly_one(x, &ctx->pctx);
+}
+
+static __inline__ void qadic_gen(qadic_t x, const qadic_ctx_t ctx)
+{
+    const long d = qadic_ctx_degree(ctx);
+
+    if (d > 1)
+    {
+        if ((&ctx->pctx)->N > 0)
+        {
+            padic_poly_fit_length(x, 2);
+            fmpz_zero(x->coeffs + 0);
+            fmpz_one(x->coeffs + 1);
+            _padic_poly_set_length(x, 2);
+            x->val = 0;
+        }
+        else
+        {
+            padic_poly_zero(x);
+        }
+    }
+    else
+    {
+        printf("Exception (qadic_gen).  Extension degree d = 1.\n");
+        abort();
+    }
+}
+
+static __inline__ 
+void qadic_set_ui(qadic_t rop, ulong op, const qadic_ctx_t ctx)
+{
+    padic_poly_set_ui(rop, op, &ctx->pctx);
 }
 
 static __inline__ int 
@@ -266,6 +295,14 @@ qadic_get_padic(padic_t rop, const qadic_t op, const qadic_ctx_t ctx)
         return 1;
     }
 }
+
+static __inline__ void qadic_set(qadic_t x, const qadic_t y)
+{
+    padic_poly_set(x, y);
+}
+
+void qadic_set_fmpz_poly(qadic_t rop, const fmpz_poly_t op, 
+                         const qadic_ctx_t ctx);
 
 /* Comparison ****************************************************************/
 

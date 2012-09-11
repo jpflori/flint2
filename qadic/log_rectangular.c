@@ -76,7 +76,7 @@ _qadic_log_rectangular_series(fmpz *z, const fmpz *y, long len, long n,
                     fmpz_add(t + i, t + i, pN);
                     fmpz_fdiv_q_2exp(t + i, t + i, 1);
                 }
-            _fmpz_mod_poly_reduce(t, 2 * len - 1, a, j, lena, pN);
+            _qadic_reduce(t, 2 * len - 1, a, j, lena, pN);
             _fmpz_mod_poly_add(z, y, len, t, FLINT_MIN(d, 2 * len - 1), pN);
 
             _fmpz_vec_clear(t, 2 * len - 1);
@@ -104,7 +104,7 @@ _qadic_log_rectangular_series(fmpz *z, const fmpz *y, long len, long n,
         for (i = 2; i <= b; i++)
         {
             _fmpz_mod_poly_mul(ypow + i * d, ypow + (i - 1) * d, d, y, len, pNk);
-            _fmpz_mod_poly_reduce(ypow + i * d, d + len - 1, a, j, lena, pNk);
+            _qadic_reduce(ypow + i * d, d + len - 1, a, j, lena, pNk);
         }
 
         _fmpz_vec_zero(z, d);
@@ -141,7 +141,7 @@ _qadic_log_rectangular_series(fmpz *z, const fmpz *y, long len, long n,
 
             /* Set z = z y^b + c */
             _fmpz_mod_poly_mul(t, z, d, ypow + b * d, d, pNk);
-            _fmpz_mod_poly_reduce(t, 2 * d - 1, a, j, lena, pNk);
+            _qadic_reduce(t, 2 * d - 1, a, j, lena, pNk);
             _fmpz_vec_add(z, c, t, d);
             _fmpz_vec_scalar_mod_fmpz(z, z, d, pNk);
         }

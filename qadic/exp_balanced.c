@@ -47,7 +47,7 @@ _qadic_exp_bsplit_series(fmpz *P, fmpz_t Q, fmpz *T,
     {
         _fmpz_poly_sqr(P, x, len);
         _fmpz_vec_zero(P + (2*len - 1), d - (2*len - 1));
-        _fmpz_poly_reduce(P, 2*len - 1, a, j, lena);
+        _qadic_reduce_no_mod(P, 2*len - 1, a, j, lena);
 
         fmpz_set_si(Q, lo);
         fmpz_mul_si(Q, Q, lo + 1);
@@ -73,13 +73,13 @@ _qadic_exp_bsplit_series(fmpz *P, fmpz_t Q, fmpz *T,
         _qadic_exp_bsplit_series(PR, QR, TR, x, len, m, hi, a, j, lena);
 
         _fmpz_poly_mul(W, TR, d, P, d);
-        _fmpz_poly_reduce(W, 2*d - 1, a, j, lena);
+        _qadic_reduce_no_mod(W, 2*d - 1, a, j, lena);
 
         _fmpz_vec_scalar_mul_fmpz(T, T, d, QR);
         _fmpz_vec_add(T, T, W, d);
 
         _fmpz_poly_mul(W, P, d, PR, d);
-        _fmpz_poly_reduce(W, 2*d - 1, a, j, lena);
+        _qadic_reduce_no_mod(W, 2*d - 1, a, j, lena);
         _fmpz_vec_swap(P, W, d);
 
         fmpz_mul(Q, Q, QR);
@@ -173,7 +173,7 @@ void _qadic_exp_balanced(fmpz *rop, const fmpz *x, long v, long len,
         {
             _qadic_exp_bsplit(r, r, w, d, a, j, lena, p, N);
             _fmpz_poly_mul(s, rop, d, r, d);
-            _fmpz_poly_reduce(s, 2*d - 1, a, j, lena);
+            _qadic_reduce_no_mod(s, 2*d - 1, a, j, lena);
             _fmpz_vec_scalar_mod_fmpz(rop, s, d, pN);
         }
 
