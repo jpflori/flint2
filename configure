@@ -378,9 +378,9 @@ echo "EXTRA_INCS_DIRS=$EXTRA_INCS_DIRS" >> Makefile
 echo "FLINT_MPIR_LIB_DIR=$MPIR_LIB_DIR" >> Makefile
 echo "FLINT_MPIR_INC_DIR=$MPIR_INC_DIR" >> Makefile
 echo "FLINT_MPFR_LIB_DIR=$MPFR_LIB_DIR" >> Makefile
-echo "FLINT_MPFR_INC_DIR=$MPFR_INCLUDE_DIR" >> Makefile
+echo "FLINT_MPFR_INC_DIR=$MPFR_INC_DIR" >> Makefile
 echo "FLINT_NTL_LIB_DIR=$NTL_LIB_DIR" >> Makefile
-echo "FLINT_NTL_INC_DIR=$NTL_INCLUDE_DIR" >> Makefile
+echo "FLINT_NTL_INC_DIR=$NTL_INC_DIR" >> Makefile
 echo "FLINT_CPIMPORT_DIR=$FLINT_CPIMPORT_DIR" >> Makefile
 echo "FLINT_CPIMPORT=$FLINT_CPIMPORT" >> Makefile
 echo "" >> Makefile
