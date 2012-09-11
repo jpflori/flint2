@@ -20,7 +20,7 @@ LD_LIBRARY_PATH := $(subst $(SPACE),:,$(LIBS_DIRS)):${LD_LIBRARY_PATH}
 
 export
 
-SOURCES = clz_tab.c memory_manager.c version.c
+SOURCES = clz_tab.c memory_manager.c profiler.c version.c
 
 HEADERS = $(patsubst %, %.h, $(BUILD_DIRS)) longlong.h flint.h
 
