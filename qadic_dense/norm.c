@@ -44,7 +44,7 @@
  */
 
 void _qadic_dense_norm(fmpz_t rop, const fmpz *op, long len, 
-                 const fmpz *mod, long lenmod, 
+                 const fmpz *mod, const fmpz *invmod, long lenmod, 
                  const fmpz_t p, long N)
 {
     const long d = lenmod - 1;
@@ -75,16 +75,16 @@ void _qadic_dense_norm(fmpz_t rop, const fmpz *op, long len,
         {
             if (4 * FLINT_FLOG2(N) * FLINT_FLOG2(N) * FLINT_FLOG2(d) < d*d*d)
             {
-                _qadic_dense_norm_analytic(rop, y, w, len, mod, lenmod, p, N);
+                _qadic_dense_norm_analytic(rop, y, w, len, mod, invmod, lenmod, p, N);
             }
             else
             {
-                _qadic_dense_norm_resultant(rop, op, len, mod, lenmod, p, N);
+                _qadic_dense_norm_resultant(rop, op, len, mod, invmod, lenmod, p, N);
             }
         }
         else
         {
-            _qadic_dense_norm_resultant(rop, op, len, mod, lenmod, p, N);
+            _qadic_dense_norm_resultant(rop, op, len, mod, invmod, lenmod, p, N);
         }
 
         _fmpz_vec_clear(y, len);
@@ -105,8 +105,9 @@ void qadic_dense_norm(padic_t rop, const qadic_dense_t op, const qadic_dense_ctx
     }
     else
     {
-        _qadic_dense_norm(padic_unit(rop), op->coeffs, op->length, 
-                    ctx->mod->coeffs, d + 1, p, N - d * op->val);
+        _qadic_dense_norm(padic_unit(rop), op->coeffs, op->length,
+                          ctx->mod->coeffs, ctx->invmod->coeffs, d + 1,
+                          p, N - d * op->val);
         padic_val(rop) = d * op->val;
     }
 }

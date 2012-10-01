@@ -46,7 +46,7 @@ extern long _padic_log_bound(long v, long N, long p);
  */
 static void 
 _qadic_dense_log_rectangular_series(fmpz *z, const fmpz *y, long len, long n, 
-                       const fmpz *mod, long lenmod, 
+                       const fmpz *mod, const fmpz *invmod, long lenmod, 
                        const fmpz_t p, long N, const fmpz_t pN)
 {
     const long d = lenmod - 1;
@@ -77,7 +77,7 @@ _qadic_dense_log_rectangular_series(fmpz *z, const fmpz *y, long len, long n,
                     fmpz_add(s + i, s + i, pN);
                     fmpz_fdiv_q_2exp(s + i, s + i, 1);
                 }
-            _fmpz_mod_poly_dense_reduce(t, s, 2 * len - 1, mod, lenmod, pN);
+            _qadic_dense_reduce(t, s, 2 * len - 1, mod, invmod, lenmod, pN);
             _fmpz_mod_poly_add(z, y, len, t, FLINT_MIN(d, 2 * len - 1), pN);
 
             _fmpz_vec_clear(s, 2 * len - 1);
@@ -107,7 +107,7 @@ _qadic_dense_log_rectangular_series(fmpz *z, const fmpz *y, long len, long n,
         for (i = 2; i <= b; i++)
         {
             _fmpz_mod_poly_mul(t, ypow + (i - 1) * d, d, y, len, pNk);
-            _fmpz_mod_poly_dense_reduce(ypow + i * d, t, d + len - 1, mod, lenmod, pNk);
+            _qadic_dense_reduce(ypow + i * d, t, d + len - 1, mod, invmod, lenmod, pNk);
         }
 
         _fmpz_vec_zero(z, d);
@@ -144,7 +144,7 @@ _qadic_dense_log_rectangular_series(fmpz *z, const fmpz *y, long len, long n,
 
             /* Set z = z y^b + c */
             _fmpz_mod_poly_mul(s, z, d, ypow + b * d, d, pNk);
-            _fmpz_mod_poly_dense_reduce(t, s, 2 * d - 1, mod, lenmod, pNk);
+            _qadic_dense_reduce(t, s, 2 * d - 1, mod, invmod, lenmod, pNk);
             _fmpz_vec_add(z, c, t, d);
             _fmpz_vec_scalar_mod_fmpz(z, z, d, pNk);
         }
@@ -163,7 +163,7 @@ _qadic_dense_log_rectangular_series(fmpz *z, const fmpz *y, long len, long n,
 }
 
 void _qadic_dense_log_rectangular(fmpz *z, const fmpz *y, long v, long len, 
-                            const fmpz *mod, long lenmod, 
+                            const fmpz *mod, const long *invmod, long lenmod, 
                             const fmpz_t p, long N, const fmpz_t pN)
 {
     const long d = lenmod - 1;
@@ -173,7 +173,7 @@ void _qadic_dense_log_rectangular(fmpz *z, const fmpz *y, long v, long len,
         const long q = fmpz_get_si(p);
         const long i = _padic_log_bound(v, N, q) - 1 + 10;
 
-        _qadic_dense_log_rectangular_series(z, y, len, i, mod, lenmod, p, N, pN);
+        _qadic_dense_log_rectangular_series(z, y, len, i, mod, invmod, lenmod, p, N, pN);
         _fmpz_mod_poly_neg(z, z, d, pN);
     }
     else
@@ -229,8 +229,9 @@ int qadic_dense_log_rectangular(qadic_dense_t rop, const qadic_dense_t op, const
                 {
                     padic_poly_fit_length(rop, d);
 
-                    _qadic_dense_log_rectangular(rop->coeffs, x, v, len, 
-                                           ctx->mod->coeffs, d + 1, p, N, pN);
+                    _qadic_dense_log_rectangular(rop->coeffs, x, v, len,
+                                                 ctx->mod->coeffs, ctx->invmod->coeffs, d + 1,
+                                                 p, N, pN);
                     rop->val = 0;
 
                     _padic_poly_set_length(rop, d);

@@ -39,8 +39,8 @@
  */
 
 static int 
-_fmpz_mod_poly_dense_sqrtmod_p(fmpz *rop, const fmpz *op, long len, 
-                         const fmpz *mod, long lenmod, 
+_qadic_dense_sqrtmod_p(fmpz *rop, const fmpz *op, long len, 
+                         const fmpz *mod, const fmpz *invmod, long lenmod, 
                          const fmpz_t p)
 {
     const long d = lenmod - 1;
@@ -73,14 +73,14 @@ _fmpz_mod_poly_dense_sqrtmod_p(fmpz *rop, const fmpz *op, long len,
         fmpz_sub_ui(z, z, 3);
         fmpz_fdiv_q_2exp(z, z, 2);
 
-        _qadic_dense_pow(v, op, len, z, mod, lenmod, p);
+        _qadic_dense_pow(v, op, len, z, mod, invmod, lenmod, p);
 
         _fmpz_mod_poly_mul(w, v, d, op, len, p);
         _fmpz_vec_zero(w + d + len - 1, d - len);
-        _fmpz_mod_poly_dense_reduce(rop, w, d + len - 1, mod, lenmod, p);
+        _qadic_dense_reduce(rop, w, d + len - 1, mod, invmod, lenmod, p);
 
         _fmpz_mod_poly_mul(w, rop, d, v, d, p);
-        _fmpz_mod_poly_dense_reduce(v, w, 2 * d - 1, mod, lenmod, p);
+        _qadic_dense_reduce(v, w, 2 * d - 1, mod, invmod, lenmod, p);
         ans = fmpz_is_one(v + 0);
 
         fmpz_clear(z);
@@ -121,7 +121,7 @@ _fmpz_mod_poly_dense_sqrtmod_p(fmpz *rop, const fmpz *op, long len,
 
         /* Check whether op is a square, i.e. op^{(q-1}/2} == 1 */
         fmpz_fdiv_q_2exp(z, qm1, 1);
-        _qadic_dense_pow(w, op, len, z, mod, lenmod, p);
+        _qadic_dense_pow(w, op, len, z, mod, invmod, lenmod, p);
         ans = fmpz_is_one(w);
         if (!ans)
             goto exit;
@@ -140,7 +140,7 @@ _fmpz_mod_poly_dense_sqrtmod_p(fmpz *rop, const fmpz *op, long len,
                 if (i == d)
                 {
                     /* Consider this element, g^{(q-1)/2} == -1 ? */
-                    _qadic_dense_pow(w, g, d, z, mod, lenmod, p);
+                    _qadic_dense_pow(w, g, d, z, mod, invmod, lenmod, p);
                     if (fmpz_equal(w + 0, pm1))
                         break;
 
@@ -165,16 +165,16 @@ _fmpz_mod_poly_dense_sqrtmod_p(fmpz *rop, const fmpz *op, long len,
             fmpz_fdiv_q_2exp(t, t, 1);
 
         /* Set g = g^t */
-        _qadic_dense_pow(w, g, d, t, mod, lenmod, p);
+        _qadic_dense_pow(w, g, d, t, mod, invmod, lenmod, p);
         _fmpz_vec_set(g, w, d);
 
         /* Set rop = op^{(t+1)/2} */
         fmpz_add_ui(z, t, 1);
         fmpz_fdiv_q_2exp(z, z, 1);
-        _qadic_dense_pow(rop, op, len, z, mod, lenmod, p);
+        _qadic_dense_pow(rop, op, len, z, mod, invmod, lenmod, p);
 
         /* Set b = op^t */
-        _qadic_dense_pow(b, op, len, t, mod, lenmod, p);
+        _qadic_dense_pow(b, op, len, t, mod, invmod, lenmod, p);
 
         while (!_fmpz_poly_is_one(b, d))
         {
@@ -184,7 +184,7 @@ _fmpz_mod_poly_dense_sqrtmod_p(fmpz *rop, const fmpz *op, long len,
             for (k = 1; (k < s) && !_fmpz_poly_is_one(bpow, d); k++)
             {
                 _fmpz_poly_sqr(w, bpow, d);
-                _fmpz_mod_poly_dense_reduce(v, w, 2 * d - 1, mod, lenmod, p);
+                _qadic_dense_reduce(v, w, 2 * d - 1, mod, invmod, lenmod, p);
                 _fmpz_vec_scalar_mod_fmpz(bpow, v, d, p);
             }
 
@@ -192,20 +192,20 @@ _fmpz_mod_poly_dense_sqrtmod_p(fmpz *rop, const fmpz *op, long len,
             for (i = 1; i < s - k; i++)
             {
                 _fmpz_poly_sqr(w, gpow, d);
-                _fmpz_mod_poly_dense_reduce(v, w, 2 * d - 1, mod, lenmod, p);
+                _qadic_dense_reduce(v, w, 2 * d - 1, mod, invmod, lenmod, p);
                 _fmpz_vec_scalar_mod_fmpz(gpow, v, d, p);
             }
 
             _fmpz_poly_mul(w, rop, d, gpow, d);
-            _fmpz_mod_poly_dense_reduce(v, w, 2 * d - 1, mod, lenmod, p);
+            _qadic_dense_reduce(v, w, 2 * d - 1, mod, invmod, lenmod, p);
             _fmpz_vec_scalar_mod_fmpz(rop, v, d, p);
 
             _fmpz_poly_sqr(w, gpow, d);
-            _fmpz_mod_poly_dense_reduce(v, w, 2 * d - 1, mod, lenmod, p);
+            _qadic_dense_reduce(v, w, 2 * d - 1, mod, invmod, lenmod, p);
             _fmpz_vec_scalar_mod_fmpz(gpow, v, d, p);
 
             _fmpz_poly_mul(w, b, d, gpow, d);
-            _fmpz_mod_poly_dense_reduce(v, w, 2 * d - 1, mod, lenmod, p);
+            _qadic_dense_reduce(v, w, 2 * d - 1, mod, invmod, lenmod, p);
             _fmpz_vec_scalar_mod_fmpz(b, v, d, p);
 
             s = k;
@@ -246,8 +246,8 @@ _fmpz_mod_poly_dense_sqrtmod_p(fmpz *rop, const fmpz *op, long len,
  */
 
 static void 
-_fmpz_mod_poly_dense_sqrtmod_2(fmpz *rop, const fmpz *op, long len, 
-                         const fmpz *mod, long lenmod)
+_qadic_dense_sqrtmod_2(fmpz *rop, const fmpz *op, long len, 
+                       const fmpz *mod, const fmpz *invmod, long lenmod)
 {
     const fmpz_t p = {2L};
     const long d   = lenmod - 1;
@@ -256,7 +256,7 @@ _fmpz_mod_poly_dense_sqrtmod_2(fmpz *rop, const fmpz *op, long len,
 
     fmpz_init(z);
     fmpz_setbit(z, d - 1);
-    _qadic_dense_pow(rop, op, len, z, mod, lenmod, p);
+    _qadic_dense_pow(rop, op, len, z, mod, invmod, lenmod, p);
     fmpz_clear(z);
 }
 
@@ -270,7 +270,7 @@ _fmpz_mod_poly_dense_sqrtmod_2(fmpz *rop, const fmpz *op, long len,
 
 static int 
 _qadic_dense_sqrt_p(fmpz *rop, const fmpz *op, long len, 
-              const fmpz *mod, long lenmod, 
+              const fmpz *mod, const fmpz *invmod, long lenmod, 
               const fmpz_t p, long N)
 {
     const long d = lenmod - 1;
@@ -278,7 +278,7 @@ _qadic_dense_sqrt_p(fmpz *rop, const fmpz *op, long len,
 
     if (N == 1)
     {
-        ans = _fmpz_mod_poly_dense_sqrtmod_p(rop, op, len, mod, lenmod, p);
+        ans = _qadic_dense_sqrtmod_p(rop, op, len, mod, invmod, lenmod, p);
         return ans;
     }
     else
@@ -337,20 +337,18 @@ _qadic_dense_sqrt_p(fmpz *rop, const fmpz *op, long len,
         /* Run Newton iteration */
         i = n - 1;
         {
-            ans = _fmpz_mod_poly_dense_sqrtmod_p(t, u + i * len, len, mod, lenmod, p);
+            ans = _qadic_dense_sqrtmod_p(t, u + i * len, len, mod, invmod, lenmod, p);
             if (!ans)
                 goto exit;
 
-            /* Dense copy of f, used for inversion */
-            _fmpz_vec_set(s, mod, lenmod);
-            _fmpz_mod_poly_invmod(rop, t, d, s, d + 1, p);
+            _fmpz_mod_poly_invmod(rop, t, d, mod, lenmod, p);
         }
         for (i--; i >= 1; i--)  /* z := z - z (a z^2 - 1) / 2 */
         {
             _fmpz_poly_sqr(s, rop, d);
-            _fmpz_poly_dense_reduce(t, s, 2 * d - 1, mod, lenmod);
+            _qadic_dense_reduce_no_mod(t, s, 2 * d - 1, mod, invmod, lenmod);
             _fmpz_poly_mul(s, t, d, u + i * len, len);
-            _fmpz_poly_dense_reduce(t, s, d + len - 1, mod, lenmod);
+            _qadic_dense_reduce_no_mod(t, s, d + len - 1, mod, invmod, lenmod);
             fmpz_sub_ui(t, t, 1);
 
             for (k = 0; k < d; k++)
@@ -361,15 +359,15 @@ _qadic_dense_sqrt_p(fmpz *rop, const fmpz *op, long len,
             }
 
             _fmpz_poly_mul(s, t, d, rop, d);
-            _fmpz_poly_dense_reduce(t, s, 2 * d - 1, mod, lenmod);
+            _qadic_dense_reduce_no_mod(t, s, 2 * d - 1, mod, invmod, lenmod);
             _fmpz_poly_sub(rop, rop, d, t, d);
             _fmpz_vec_scalar_mod_fmpz(rop, rop, d, pow + i);
         }
         {
             _fmpz_poly_mul(t, rop, d, u + 1 * len, len);
-            _fmpz_poly_dense_reduce(s, t, d + len - 1, mod, lenmod);
+            _qadic_dense_reduce_no_mod(s, t, d + len - 1, mod, invmod, lenmod);
             _fmpz_poly_sqr(r, s, d);
-            _fmpz_poly_dense_reduce(t, r, 2 * d - 1, mod, lenmod);
+            _qadic_dense_reduce_no_mod(t, r, 2 * d - 1, mod, invmod, lenmod);
             _fmpz_poly_sub(t, u + 0 * len, len, t, d);
 
             for (k = 0; k < d; k++)
@@ -380,7 +378,7 @@ _qadic_dense_sqrt_p(fmpz *rop, const fmpz *op, long len,
             }
 
             _fmpz_poly_mul(r, rop, d, t, d);
-            _fmpz_poly_dense_reduce(t, r, 2 * d - 1, mod, lenmod);
+            _qadic_dense_reduce_no_mod(t, r, 2 * d - 1, mod, invmod, lenmod);
             _fmpz_poly_add(rop, t, d, s, d);
             _fmpz_vec_scalar_mod_fmpz(rop, rop, d, pow + 0);
         }
@@ -407,7 +405,7 @@ _qadic_dense_sqrt_p(fmpz *rop, const fmpz *op, long len,
  */
 
 int _qadic_dense_sqrt(fmpz *rop, const fmpz *op, long len, 
-                const fmpz *mod, long lenmod, 
+                const fmpz *mod, const fmpz *invmod, long lenmod, 
                 const fmpz_t p, long N)
 {
     if (*p == 2L)
@@ -417,7 +415,7 @@ int _qadic_dense_sqrt(fmpz *rop, const fmpz *op, long len,
     }
     else
     {
-        return _qadic_dense_sqrt_p(rop, op, len, mod, lenmod, p, N);
+        return _qadic_dense_sqrt_p(rop, op, len, mod, invmod, lenmod, p, N);
     }
 }
 
@@ -462,7 +460,9 @@ int qadic_dense_sqrt(qadic_dense_t rop, const qadic_dense_t op, const qadic_dens
         t = _fmpz_vec_init(2 * d - 1);
     }
 
-    ans = _qadic_dense_sqrt(t, op->coeffs, op->length, ctx->mod->coeffs, d + 1, p, N - rop->val);
+    ans = _qadic_dense_sqrt(t, op->coeffs, op->length,
+                            ctx->mod->coeffs, ctx->invmod->coeffs, d + 1,
+                            p, N - rop->val);
 
     if (rop == op)
     {

@@ -27,18 +27,18 @@
 #include "qadic_dense.h"
 
 void _qadic_dense_exp(fmpz *rop, const fmpz *op, long v, long len, 
-                           const fmpz *mod, long lenmod, 
+                           const fmpz *mod, const fmpz *invmod, long lenmod, 
                            const fmpz_t p, long N, const fmpz_t pN)
 {
     if (N < (1L << 13) / (long) fmpz_bits(p))
     {
-        _qadic_dense_exp_rectangular(rop, op, v, len, mod, lenmod, p, N, pN);
+        _qadic_dense_exp_rectangular(rop, op, v, len, mod, invmod, lenmod, p, N, pN);
     }
     else
     {
         const long d = lenmod - 1;
 
-        _qadic_dense_exp_balanced(rop, op, v, len, mod, lenmod, p, N, pN);
+        _qadic_dense_exp_balanced(rop, op, v, len, mod, invmod, lenmod, p, N, pN);
         _fmpz_vec_zero(rop + d, d - 1);
     }
 }
@@ -81,8 +81,9 @@ int qadic_dense_exp(qadic_dense_t rop, const qadic_dense_t op, const qadic_dense
                 t = _fmpz_vec_init(2 * d - 1);
             }
 
-            _qadic_dense_exp(t, op->coeffs, v, op->length, 
-                       ctx->mod->coeffs, d + 1, p, N, pN);
+            _qadic_dense_exp(t, op->coeffs, v, op->length,
+                             ctx->mod->coeffs, ctx->invmod->coeffs, d + 1,
+                             p, N, pN);
             rop->val = 0;
 
             if (rop == op)

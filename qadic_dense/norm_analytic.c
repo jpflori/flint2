@@ -36,7 +36,7 @@
  */
 
 void _qadic_dense_norm_analytic(fmpz_t rop, const fmpz *y, long v, long len, 
-                          const fmpz *mod, long lenmod, 
+                          const fmpz *mod, const fmpz *invmod, long lenmod, 
                           const fmpz_t p, long N)
 {
     const long d = lenmod - 1;
@@ -50,9 +50,9 @@ void _qadic_dense_norm_analytic(fmpz_t rop, const fmpz *y, long v, long len,
 
     fmpz_pow_ui(pN, p, N);
 
-    _qadic_dense_log(lg, y, v, len, mod, lenmod, p, N, pN);
+    _qadic_dense_log(lg, y, v, len, mod, invmod, lenmod, p, N, pN);
 
-    _qadic_dense_trace(tru, lg, d, mod, lenmod, pN);
+    _qadic_dense_trace(tru, lg, d, mod, invmod, lenmod, pN);
 
     if (!fmpz_is_zero(tru))
     {
@@ -113,7 +113,8 @@ void qadic_dense_norm_analytic(padic_t rop, const qadic_dense_t op, const qadic_
         }
 
         _qadic_dense_norm_analytic(padic_unit(rop), y, w, op->length,
-                             ctx->mod->coeffs, d + 1, p, N - d * op->val);
+                                   ctx->mod->coeffs, ctx->invmod->coeffs, d + 1,
+                                   p, N - d * op->val);
         padic_val(rop) = d * op->val;
 
         _fmpz_vec_clear(y, op->length);

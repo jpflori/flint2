@@ -29,7 +29,7 @@
 extern long _padic_exp_bound(long v, long N, const fmpz_t p);
 
 void _qadic_dense_exp_rectangular(fmpz *rop, const fmpz *op, long v, long len, 
-                            const fmpz *mod, long lenmod, 
+                            const fmpz *mod, const fmpz *invmod, long lenmod, 
                             const fmpz_t p, long N, const fmpz_t pN)
 {
     const long d = lenmod - 1;
@@ -73,7 +73,7 @@ void _qadic_dense_exp_rectangular(fmpz *rop, const fmpz *op, long v, long len,
                         fmpz_add(y + i, y + i, pN);
             }
             _fmpz_vec_scalar_fdiv_q_2exp(y, y, 2 * len - 1, 1);
-            _fmpz_mod_poly_dense_reduce(rop, y, 2 * len - 1, mod, lenmod, pN);
+            _qadic_dense_reduce(rop, y, 2 * len - 1, mod, invmod, lenmod, pN);
             _fmpz_vec_zero(rop + (2 * len - 1), d - (2 * len - 1));
             _fmpz_mod_poly_add(rop, rop, d, x, len, pN);
             fmpz_add_ui(rop, rop, 1);
@@ -113,7 +113,7 @@ void _qadic_dense_exp_rectangular(fmpz *rop, const fmpz *op, long v, long len,
         for (i = 2; i <= b; i++)
         {
             _fmpz_mod_poly_mul(t, x + (i - 1) * d, d, x + d, d, pNk);
-            _fmpz_mod_poly_dense_reduce(x + i * d, t, 2 * d - 1, mod, lenmod, pNk);
+            _qadic_dense_reduce(x + i * d, t, 2 * d - 1, mod, invmod, lenmod, pNk);
         }
 
         _fmpz_vec_zero(rop, d);
@@ -135,7 +135,7 @@ void _qadic_dense_exp_rectangular(fmpz *rop, const fmpz *op, long v, long len,
             }
 
             _fmpz_poly_mul(r, x + b * d, d, rop, d);
-            _fmpz_mod_poly_dense_reduce(t, r, 2 * d - 1, mod, lenmod, pNk);
+            _qadic_dense_reduce(t, r, 2 * d - 1, mod, invmod, lenmod, pNk);
             _fmpz_vec_scalar_mul_fmpz(rop, s, d, f);
             _fmpz_vec_add(rop, rop, t, d);
             _fmpz_vec_scalar_mod_fmpz(rop, rop, d, pNk);
@@ -204,7 +204,7 @@ int qadic_dense_exp_rectangular(qadic_dense_t rop, const qadic_dense_t op, const
             }
 
             _qadic_dense_exp_rectangular(t, op->coeffs, v, op->length, 
-                                         ctx->mod->coeffs, d + 1, p, N, pN);
+                                         ctx->mod->coeffs, ctx->invmod->coeffs, d + 1, p, N, pN);
             rop->val = 0;
 
             if (rop == op)

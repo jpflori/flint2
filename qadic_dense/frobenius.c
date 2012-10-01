@@ -36,10 +36,10 @@
  */
 
 static void 
-_fmpz_mod_poly_dense_compose_mod_rectangular(fmpz *rop, 
+_qadic_dense_compose_mod_rectangular(fmpz *rop, 
                            const fmpz *op1, long len1, 
                            const fmpz *op2, long len2, 
-                           const fmpz *mod, long lenmod, 
+                           const fmpz *mod, const fmpz *invmod, long lenmod, 
                            const fmpz_t p)
 {
     const long d = lenmod - 1;
@@ -64,7 +64,7 @@ _fmpz_mod_poly_dense_compose_mod_rectangular(fmpz *rop,
         for (i = 2; i <= B; i++)
         {
             _fmpz_poly_mul(t, pows + (i - 1) * d, d, op2, len2);
-            _fmpz_poly_dense_reduce(pows + i * d, t, d + len2 - 1, mod, lenmod);
+            _qadic_dense_reduce_no_mod(pows + i * d, t, d + len2 - 1, mod, invmod, lenmod);
             _fmpz_vec_scalar_mod_fmpz(pows + i * d, pows + i * d, d, p);
         }
 
@@ -73,7 +73,7 @@ _fmpz_mod_poly_dense_compose_mod_rectangular(fmpz *rop,
         for (i = (len1 + B - 1) / B - 1; i >= 0; i--)
         {
             _fmpz_poly_mul(s, rop, d, pows + B * d, d);
-            _fmpz_poly_dense_reduce(t, s, 2 * d - 1, mod, lenmod);
+            _qadic_dense_reduce_no_mod(t, s, 2 * d - 1, mod, invmod, lenmod);
 
             _fmpz_vec_set(rop, t, d);
             fmpz_add(rop + 0, rop + 0, op1 + i*B);
@@ -92,10 +92,10 @@ _fmpz_mod_poly_dense_compose_mod_rectangular(fmpz *rop,
 }
 
 static void 
-_fmpz_mod_poly_dense_compose_mod_horner(fmpz *rop, 
+_qadic_dense_compose_mod_horner(fmpz *rop, 
                            const fmpz *op1, long len1, 
                            const fmpz *op2, long len2, 
-                           const fmpz *mod, long lenmod, 
+                           const fmpz *mod, const fmpz *invmod, long lenmod, 
                            const fmpz_t p)
 {
     const long d = lenmod - 1;
@@ -123,7 +123,7 @@ _fmpz_mod_poly_dense_compose_mod_horner(fmpz *rop,
         for (i = len1 - 1; i >= 0; i--)
         {
             _fmpz_poly_mul(s, rop, d, op2, len2);
-            _fmpz_poly_dense_reduce(t, s, d + len2 - 1, mod, lenmod);
+            _qadic_dense_reduce_no_mod(t, s, d + len2 - 1, mod, invmod, lenmod);
             _fmpz_poly_add(rop, t, d, op1 + i, 1);
             _fmpz_vec_scalar_mod_fmpz(rop, rop, d, p);
         }
@@ -147,24 +147,24 @@ _fmpz_mod_poly_dense_compose_mod_horner(fmpz *rop,
  */
 
 static void 
-_fmpz_mod_poly_dense_compose_mod(fmpz *rop, 
+_qadic_dense_compose_mod(fmpz *rop, 
                            const fmpz *op1, long len1, 
                            const fmpz *op2, long len2, 
-                           const fmpz *mod, long lenmod, 
+                           const fmpz *mod, const fmpz *invmod, long lenmod, 
                            const fmpz_t p)
 {
     if (len1 < 6)
     {
-        _fmpz_mod_poly_dense_compose_mod_horner(rop, op1, len1, op2, len2, mod, lenmod, p);
+        _qadic_dense_compose_mod_horner(rop, op1, len1, op2, len2, mod, invmod, lenmod, p);
     }
     else
     {
-        _fmpz_mod_poly_dense_compose_mod_rectangular(rop, op1, len1, op2, len2, mod, lenmod, p);
+        _qadic_dense_compose_mod_rectangular(rop, op1, len1, op2, len2, mod, invmod, lenmod, p);
     }
 }
 
 void _qadic_dense_frobenius_a(fmpz *rop, long exp, 
-                    const fmpz *mod, long lenmod, 
+                    const fmpz *mod, const fmpz *invmod, long lenmod, 
                     const fmpz_t p, long N)
 {
     const long d = lenmod - 1;
@@ -225,28 +225,28 @@ void _qadic_dense_frobenius_a(fmpz *rop, long exp,
         fmpz op[2] = {0L, 1L};
 
         fmpz_pow_ui(t, p, exp);
-        _qadic_dense_pow(rop, op, 2, t, mod, lenmod, pow + i);
-        _fmpz_mod_poly_dense_compose_mod(t, f2, d, rop, d, mod, lenmod, pow + i);
-        _qadic_dense_inv(inv, t, d, mod, lenmod, p, 1);
+        _qadic_dense_pow(rop, op, 2, t, mod, invmod, lenmod, pow + i);
+        _qadic_dense_compose_mod(t, f2, d, rop, d, mod, invmod, lenmod, pow + i);
+        _qadic_dense_inv(inv, t, d, mod, invmod, lenmod, p, 1);
     }
     for (i--; i >= 0; i--)
     {
-        _fmpz_mod_poly_dense_compose_mod(s, f1, d + 1, rop, d, mod, lenmod, pow + i);
+        _qadic_dense_compose_mod(s, f1, d + 1, rop, d, mod, invmod, lenmod, pow + i);
         _fmpz_mod_poly_mul(t, s, d, inv, d, pow + i);
-        _fmpz_mod_poly_dense_reduce(s, t, 2*d - 1, mod, lenmod, pow + i);
+        _qadic_dense_reduce(s, t, 2*d - 1, mod, invmod, lenmod, pow + i);
         _fmpz_mod_poly_sub(rop, rop, d, s, d, pow + i);
 
         if (i > 0)
         {
-            _fmpz_mod_poly_dense_compose_mod(s, f2, d, rop, d, mod, lenmod, pow + i);
+            _qadic_dense_compose_mod(s, f2, d, rop, d, mod, invmod, lenmod, pow + i);
             _fmpz_mod_poly_mul(t, inv, d, s, d, pow + i);
-            _fmpz_mod_poly_dense_reduce(s, t, 2*d - 1, mod, lenmod, pow + i);
+            _qadic_dense_reduce(s, t, 2*d - 1, mod, invmod, lenmod, pow + i);
             fmpz_sub_ui(s, s, 2);
             if (fmpz_sgn(s) < 0)
                 fmpz_add(s, s, pow + i);
             _fmpz_mod_poly_neg(s, s, d, pow + i);
             _fmpz_mod_poly_mul(t, inv, d, s, d, pow + i);
-            _fmpz_mod_poly_dense_reduce(s, t, 2*d - 1, mod, lenmod, pow + i);
+            _qadic_dense_reduce(s, t, 2*d - 1, mod, invmod, lenmod, pow + i);
 
             /* SWAP(inv, s).  Requires the arrays to be of the same size. */
             {
@@ -269,7 +269,7 @@ void _qadic_dense_frobenius_a(fmpz *rop, long exp,
 }
 
 void _qadic_dense_frobenius(fmpz *rop, const fmpz *op, long len, long e, 
-                  const fmpz *mod, long lenmod, 
+                  const fmpz *mod, const fmpz *invmod, long lenmod, 
                   const fmpz_t p, long N)
 {
     const long d = lenmod - 1;
@@ -285,7 +285,7 @@ void _qadic_dense_frobenius(fmpz *rop, const fmpz *op, long len, long e,
 
         fmpz_init(t);
         fmpz_pow_ui(t, p, e);
-        _qadic_dense_pow(rop, op, len, t, mod, lenmod, p);
+        _qadic_dense_pow(rop, op, len, t, mod, invmod, lenmod, p);
         fmpz_clear(t);
     }
     else
@@ -297,9 +297,9 @@ void _qadic_dense_frobenius(fmpz *rop, const fmpz *op, long len, long e,
         fmpz_init(pow);
         fmpz_pow_ui(pow, p, N);
 
-        _qadic_dense_frobenius_a(t, e, mod, lenmod, p, N);
+        _qadic_dense_frobenius_a(t, e, mod, invmod, lenmod, p, N);
 
-        _fmpz_mod_poly_dense_compose_mod(rop, op, len, t, d, mod, lenmod, pow);
+        _qadic_dense_compose_mod(rop, op, len, t, d, mod, invmod, lenmod, pow);
         _fmpz_vec_zero(rop + d, d - 1);
 
         _fmpz_vec_clear(t, 2*d - 1);
@@ -339,8 +339,9 @@ void qadic_dense_frobenius(qadic_dense_t rop, const qadic_dense_t op, long e, co
             t = rop->coeffs;
         }
 
-        _qadic_dense_frobenius(t, op->coeffs, op->length, e, 
-                     ctx->mod->coeffs, d + 1, (&ctx->pctx)->p, N - op->val);
+        _qadic_dense_frobenius(t, op->coeffs, op->length, e,
+                               ctx->mod->coeffs, ctx->invmod->coeffs, d + 1,
+                               (&ctx->pctx)->p, N - op->val);
 
         if (rop == op)
         {

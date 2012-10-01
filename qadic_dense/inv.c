@@ -27,7 +27,7 @@
 #include "qadic_dense.h"
 
 void _qadic_dense_inv(fmpz *rop, const fmpz *op, long len, 
-                const fmpz *mod, long lenmod, 
+                const fmpz *mod, const fmpz *invmod, long lenmod, 
                 const fmpz_t p, long N)
 {
     const long d = lenmod - 1;
@@ -49,7 +49,7 @@ void _qadic_dense_inv(fmpz *rop, const fmpz *op, long len,
     else  /* d, N >= 2 */
     {
         long *e, i, n;
-        fmpz *pow, *redmod, *u;
+        fmpz *pow, *redmod, *redinvmod, *u;
         fmpz *s, *t;
 
         n = FLINT_CLOG2(N) + 1;
@@ -59,18 +59,20 @@ void _qadic_dense_inv(fmpz *rop, const fmpz *op, long len,
         for (e[i = 0] = N; e[i] > 1; i++)
             e[i + 1] = (e[i] + 1) / 2;
 
-        pow    = _fmpz_vec_init(n);
-        redmod = _fmpz_vec_init(lenmod * n);
-        u      = _fmpz_vec_init(len * n);
-        s      = _fmpz_vec_init(2 * d - 1);
-        t      = _fmpz_vec_init(2 * d - 1);
+        pow       = _fmpz_vec_init(n);
+        redmod    = _fmpz_vec_init(lenmod * n);
+        redinvmod = _fmpz_vec_init(lenmod * n);
+        u = _fmpz_vec_init(len * n);
+        s = _fmpz_vec_init(2 * d - 1);
+        t = _fmpz_vec_init(2 * d - 1);
 
         /* Compute powers of p and reduced moduli */
         {
             fmpz_one(t);
             fmpz_set(pow + i, p);
             _fmpz_vec_scalar_mod_fmpz(redmod + i * lenmod, mod, lenmod, pow + i);
-        }
+            _fmpz_vec_scalar_mod_fmpz(redinvmod + i * lenmod, invmod, lenmod, pow + i);
+         }
         for (i--; i >= 1; i--)
         {
             if (e[i] & 1L)
@@ -84,6 +86,7 @@ void _qadic_dense_inv(fmpz *rop, const fmpz *op, long len,
                 fmpz_mul(pow + i, pow + (i + 1), pow + (i + 1));
             }
             _fmpz_vec_scalar_mod_fmpz(redmod + i * lenmod, mod, lenmod, pow + i);
+            _fmpz_vec_scalar_mod_fmpz(redinvmod + i * lenmod, invmod, lenmod, pow + i);
         }
         {
             if (e[i] & 1L)
@@ -91,6 +94,7 @@ void _qadic_dense_inv(fmpz *rop, const fmpz *op, long len,
             else
                 fmpz_mul(pow + i, pow + (i + 1), pow + (i + 1));
             _fmpz_vec_scalar_mod_fmpz(redmod + i * lenmod, mod, lenmod, pow + i);
+            _fmpz_vec_scalar_mod_fmpz(redinvmod + i * lenmod, invmod, lenmod, pow + i);
         }
 
         /* Compute reduced units */
@@ -110,10 +114,12 @@ void _qadic_dense_inv(fmpz *rop, const fmpz *op, long len,
         for (i--; i >= 0; i--)  /* z' := 2 z - a z^2 */
         {
             _fmpz_mod_poly_sqr(s, rop, d, pow + i);
-            _fmpz_mod_poly_dense_reduce(t, s, 2 * d - 1, redmod + i * lenmod, lenmod, pow + i);
+            _qadic_dense_reduce(t, s, 2 * d - 1, redmod + i * lenmod,
+                                redinvmod + i * lenmod, lenmod, pow + i);
 
             _fmpz_mod_poly_mul(s, t, d, u + i * len, len, pow + i);
-            _fmpz_mod_poly_dense_reduce(t, s, d + len - 1, redmod + i * lenmod, lenmod, pow + i);
+            _qadic_dense_reduce(t, s, d + len - 1, redmod + i * lenmod,
+                                redinvmod + i * lenmod, lenmod, pow + i);
 
             _fmpz_vec_scalar_mul_2exp(rop, rop, d, 1);
             _fmpz_mod_poly_sub(rop, rop, d, t, d, pow + i);
@@ -123,6 +129,7 @@ void _qadic_dense_inv(fmpz *rop, const fmpz *op, long len,
 
         _fmpz_vec_clear(pow, n);
         _fmpz_vec_clear(redmod, lenmod * n);
+        _fmpz_vec_clear(redinvmod, lenmod * n);
         _fmpz_vec_clear(u, len * n);
         _fmpz_vec_clear(s, 2 * d - 1);
         _fmpz_vec_clear(t, 2 * d - 1);
@@ -163,8 +170,9 @@ void qadic_dense_inv(qadic_dense_t x, const qadic_dense_t y, const qadic_dense_c
             t = x->coeffs;
         }
 
-        _qadic_dense_inv(t, y->coeffs, y->length, 
-                     ctx->mod->coeffs, d + 1, (&ctx->pctx)->p, N + y->val);
+        _qadic_dense_inv(t, y->coeffs, y->length,
+                         ctx->mod->coeffs, ctx->invmod->coeffs,
+                         d + 1, (&ctx->pctx)->p, N + y->val);
         x->val = - y->val;
 
         if (x == y)

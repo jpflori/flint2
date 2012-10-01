@@ -39,7 +39,7 @@
  */
 
 void _qadic_dense_teichmuller(fmpz *rop, const fmpz *op, long len, 
-                        const fmpz *mod, long lenmod, 
+                        const fmpz *mod, const fmpz *invmod, long lenmod, 
                         const fmpz_t p, long N)
 {
     const long d = lenmod - 1;
@@ -123,7 +123,7 @@ void _qadic_dense_teichmuller(fmpz *rop, const fmpz *op, long len,
         for (i--; i >= 0; i--)
         {
             /* Lift rop */
-            _qadic_dense_pow(t, rop, d, q, mod, lenmod, pow + i);
+            _qadic_dense_pow(t, rop, d, q, mod, invmod, lenmod, pow + i);
             _fmpz_poly_sub(t, t, d, rop, d);
             _fmpz_vec_scalar_submul_fmpz(rop, t, d, inv);
             _fmpz_vec_scalar_mod_fmpz(rop, rop, d, pow + i);
@@ -167,8 +167,9 @@ void qadic_dense_teichmuller(qadic_dense_t rop, const qadic_dense_t op, const qa
 
         padic_poly_fit_length(rop, d);
 
-        _qadic_dense_teichmuller(rop->coeffs, op->coeffs, op->length, 
-                           ctx->mod->coeffs, d + 1, (&ctx->pctx)->p, N);
+        _qadic_dense_teichmuller(rop->coeffs, op->coeffs, op->length,
+                                 ctx->mod->coeffs, ctx->invmod->coeffs, d + 1,
+                                 (&ctx->pctx)->p, N);
         rop->val = 0;
         _padic_poly_set_length(rop, d);
         _padic_poly_normalise(rop);

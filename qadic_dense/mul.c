@@ -34,15 +34,15 @@
 static 
 void _qadic_dense_mul(fmpz *rop, 
                 const fmpz *op1, long len1, const fmpz *op2, long len2, 
-                const fmpz *mod, long lenmod, const fmpz_t pN)
+                const fmpz *mod, const fmpz *invmod, long lenmod, const fmpz_t pN)
 {
     fmpz *t;
 
     t = _fmpz_vec_init(len1 + len2 - 1);
 
-    _fmpz_poly_mul(t, op1, len1, op2, len2);
-    /* _fmpz_mod_poly_mul(t, op1, len1, op2, len2, pN); */
-    _fmpz_mod_poly_dense_reduce(rop, t, len1 + len2 - 1, mod, lenmod, pN);
+    _fmpz_mod_poly_mul(t, op1, len1, op2, len2, pN);
+    /* _fmpz_poly_mul(t, op1, len1, op2, len2); */
+    _qadic_dense_reduce(rop, t, len1 + len2 - 1, mod, invmod, lenmod, pN);
 
     _fmpz_vec_clear(t, len1 + len2 - 1);
 }
@@ -81,11 +81,11 @@ void qadic_dense_mul(qadic_dense_t x, const qadic_dense_t y, const qadic_dense_t
         }
 
         if (leny >= lenz)
-            _qadic_dense_mul(t, y->coeffs, leny, 
-                          z->coeffs, lenz, ctx->mod->coeffs, d + 1, pN);
+            _qadic_dense_mul(t, y->coeffs, leny, z->coeffs, lenz,
+                             ctx->mod->coeffs, ctx->invmod->coeffs, d + 1, pN);
         else
-            _qadic_dense_mul(t, z->coeffs, lenz, 
-                          y->coeffs, leny, ctx->mod->coeffs, d + 1, pN);
+            _qadic_dense_mul(t, z->coeffs, lenz, y->coeffs, leny,
+                             ctx->mod->coeffs, ctx->invmod->coeffs, d + 1, pN);
 
         if (x == y || x == z)
         {

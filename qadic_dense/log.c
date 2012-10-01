@@ -26,18 +26,18 @@
 #include "qadic_dense.h"
 
 void _qadic_dense_log(fmpz *z, const fmpz *y, long v, long len, 
-                const fmpz *mod, long lenmod, 
+                const fmpz *mod, const fmpz *invmod, long lenmod, 
                 const fmpz_t p, long N, const fmpz_t pN)
 {
     const long d = lenmod - 1;
 
     if (N < (1L < 10) / (long) fmpz_bits(p))
     {
-        _qadic_dense_log_rectangular(z, y, v, len, mod, lenmod, p, N, pN);
+        _qadic_dense_log_rectangular(z, y, v, len, mod, invmod, lenmod, p, N, pN);
     }
     else
     {
-        _qadic_dense_log_balanced(z, y, len, mod, lenmod, p, N, pN);
+        _qadic_dense_log_balanced(z, y, len, mod, invmod, lenmod, p, N, pN);
     }
 }
 
@@ -87,8 +87,9 @@ int qadic_dense_log(qadic_dense_t rop, const qadic_dense_t op, const qadic_dense
                 {
                     padic_poly_fit_length(rop, d);
 
-                    _qadic_dense_log(rop->coeffs, x, v, len, 
-                               ctx->mod->coeffs, d + 1, p, N, pN);
+                    _qadic_dense_log(rop->coeffs, x, v, len,
+                                     ctx->mod->coeffs, ctx->invmod->coeffs, d + 1,
+                                     p, N, pN);
                     rop->val = 0;
 
                     _padic_poly_set_length(rop, d);

@@ -125,8 +125,10 @@ void qadic_dense_ctx_init_conway(qadic_dense_ctx_t ctx,
         abort();
     }
 
+    /* Precomputed inverse for fast modular reduction */
+    qadic_dense_ctx_init_inv(ctx, &ctx->pctx, d, N);
+
     ctx->var = flint_malloc(strlen(var));
     strcpy(ctx->var, var);
     return;
 }
-

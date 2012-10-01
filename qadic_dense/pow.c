@@ -27,7 +27,7 @@
 #include "qadic_dense.h"
 
 void _qadic_dense_pow(fmpz *rop, const fmpz *op, long len, const fmpz_t e, 
-                   const fmpz *mod, long lenmod, 
+                   const fmpz *mod, const fmpz *invmod, long lenmod, 
                    const fmpz_t p)
 {
     const long d = lenmod - 1;
@@ -89,13 +89,13 @@ void _qadic_dense_pow(fmpz *rop, const fmpz *op, long len, const fmpz_t e,
 
         _fmpz_mod_poly_sqr(u, op, len, p);
         /* _fmpz_poly_sqr(u, op, len); */
-        _fmpz_mod_poly_dense_reduce(R, u, 2 * len - 1, mod, lenmod, p);
+        _qadic_dense_reduce(R, u, 2 * len - 1, mod, invmod, lenmod, p);
 
         if (fmpz_tstbit(e, bit))
         {
             _fmpz_mod_poly_mul(u, R, d, op, len, p);
             /* _fmpz_poly_mul(u, R, d, op, len); */
-            _fmpz_mod_poly_dense_reduce(S, u, d + len - 1, mod, lenmod, p);
+            _qadic_dense_reduce(S, u, d + len - 1, mod, invmod, lenmod, p);
             T = R;
             R = S;
             S = T;
@@ -107,16 +107,16 @@ void _qadic_dense_pow(fmpz *rop, const fmpz *op, long len, const fmpz_t e,
             {
                 _fmpz_mod_poly_sqr(u, R, d, p);
                 /* _fmpz_poly_sqr(u, R, d); */
-                _fmpz_mod_poly_dense_reduce(S, u, 2 * d - 1, mod, lenmod, p);
+                _qadic_dense_reduce(S, u, 2 * d - 1, mod, invmod, lenmod, p);
                 _fmpz_mod_poly_mul(u, S, d, op, len, p);
                 /* _fmpz_poly_mul(u, S, d, op, len); */
-                _fmpz_mod_poly_dense_reduce(R, u, d + len - 1, mod, lenmod, p);
+                _qadic_dense_reduce(R, u, d + len - 1, mod, invmod, lenmod, p);
             }
             else
             {
                  _fmpz_mod_poly_sqr(u, R, d, p);
                  /* _fmpz_poly_sqr(u, R, d); */
-                _fmpz_mod_poly_dense_reduce(S, u, 2 * d - 1, mod, lenmod, p);
+                _qadic_dense_reduce(S, u, 2 * d - 1, mod, invmod, lenmod, p);
                 T = R;
                 R = S;
                 S = T;
@@ -181,7 +181,8 @@ void qadic_dense_pow(qadic_dense_t x, const qadic_dense_t y, const fmpz_t e, con
                 t = x->coeffs;
             }
 
-            _qadic_dense_pow(t, y->coeffs, y->length, e, ctx->mod->coeffs, d + 1, pow);
+            _qadic_dense_pow(t, y->coeffs, y->length, e,
+                             ctx->mod->coeffs, ctx->invmod->coeffs, d + 1, pow);
             x->val = fmpz_get_si(val);
 
             if (x == y)

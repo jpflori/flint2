@@ -108,7 +108,7 @@ void _fmpz_mod_mat_det(fmpz_t rop, const fmpz *M, long n, const fmpz_t pN)
 }
 
 void _qadic_dense_norm_resultant(fmpz_t rop, const fmpz *op, long len, 
-                           const fmpz *mod, long lenmod, 
+                           const fmpz *mod, const fmpz *invmod, long lenmod, 
                            const fmpz_t p, long N)
 {
     const long d = lenmod - 1;
@@ -183,9 +183,9 @@ void qadic_dense_norm_resultant(padic_t rop, const qadic_dense_t op, const qadic
     }
     else
     {
-        _qadic_dense_norm_resultant(padic_unit(rop), op->coeffs, op->length, 
-                              ctx->mod->coeffs, d + 1, (&ctx->pctx)->p, 
-                              N - d * op->val);
+        _qadic_dense_norm_resultant(padic_unit(rop), op->coeffs, op->length,
+                                    ctx->mod->coeffs, ctx->invmod->coeffs, d + 1,
+                                    (&ctx->pctx)->p, N - d * op->val);
         padic_val(rop) = d * op->val;
     }
 }

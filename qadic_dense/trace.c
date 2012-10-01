@@ -26,7 +26,7 @@
 #include "qadic_dense.h"
 
 void _qadic_dense_trace(fmpz_t rop, const fmpz *op, long len, 
-                  const fmpz *mod, long lenmod, const fmpz_t pN)
+                  const fmpz *mod, const fmpz *invmod, long lenmod, const fmpz_t pN)
 {
     const long d = lenmod - 1;
 
@@ -79,7 +79,7 @@ void qadic_dense_trace(padic_t rop, const qadic_dense_t op, const qadic_dense_ct
         alloc = _padic_ctx_pow_ui(pN, N - op->val, &ctx->pctx);
 
         _qadic_dense_trace(padic_unit(rop), op->coeffs, op->length, 
-                           ctx->mod->coeffs, d + 1, pN);
+                           ctx->mod->coeffs, ctx->invmod->coeffs, d + 1, pN);
         padic_val(rop) = op->val;
 
         _padic_canonicalise(rop, &ctx->pctx);

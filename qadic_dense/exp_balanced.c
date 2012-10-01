@@ -28,9 +28,9 @@
 extern long _padic_exp_bound(long v, long N, const fmpz_t p);
 
 static void 
-_qadic_dense_exp_bsplit_series(fmpz *P, fmpz_t Q, fmpz *T, 
-                         const fmpz *x, long len, long lo, long hi, 
-                         const fmpz *mod, long lenmod)
+_qadic_dense_exp_bsplit_series(fmpz *P, fmpz_t Q, fmpz *T,
+                               const fmpz *x, long len, long lo, long hi,
+                               const fmpz *mod, const fmpz *invmod, long lenmod)
 {
     const long d = lenmod - 1;
 
@@ -47,7 +47,7 @@ _qadic_dense_exp_bsplit_series(fmpz *P, fmpz_t Q, fmpz *T,
     {
         _fmpz_poly_sqr(T, x, len);
         _fmpz_vec_zero(T + (2*len - 1), d - (2*len - 1));
-        _fmpz_poly_dense_reduce(P, T, 2*len - 1, mod, lenmod);
+        _qadic_dense_reduce_no_mod(P, T, 2*len - 1, mod, invmod, lenmod);
 
         fmpz_set_si(Q, lo);
         fmpz_mul_si(Q, Q, lo + 1);
@@ -69,18 +69,18 @@ _qadic_dense_exp_bsplit_series(fmpz *P, fmpz_t Q, fmpz *T,
         W  = _fmpz_vec_init(2*d - 1);
         fmpz_init(QR);
 
-        _qadic_dense_exp_bsplit_series(P, Q, T, x, len, lo, m, mod, lenmod);
+        _qadic_dense_exp_bsplit_series(P, Q, T, x, len, lo, m, mod, invmod, lenmod);
 
-        _qadic_dense_exp_bsplit_series(PR, QR, TR, x, len, m, hi, mod, lenmod);
+        _qadic_dense_exp_bsplit_series(PR, QR, TR, x, len, m, hi, mod, invmod, lenmod);
 
         _fmpz_poly_mul(t, TR, d, P, d);
-        _fmpz_poly_dense_reduce(W, t, 2*d - 1, mod, lenmod);
+        _qadic_dense_reduce_no_mod(W, t, 2*d - 1, mod, invmod, lenmod);
 
         _fmpz_vec_scalar_mul_fmpz(T, T, d, QR);
         _fmpz_vec_add(T, T, W, d);
 
         _fmpz_poly_mul(t, P, d, PR, d);
-        _fmpz_poly_dense_reduce(W, t, 2*d - 1, mod, lenmod);
+        _qadic_dense_reduce_no_mod(W, t, 2*d - 1, mod, invmod, lenmod);
         _fmpz_vec_swap(P, W, d);
 
         fmpz_mul(Q, Q, QR);
@@ -95,7 +95,7 @@ _qadic_dense_exp_bsplit_series(fmpz *P, fmpz_t Q, fmpz *T,
 
 static void 
 _qadic_dense_exp_bsplit(fmpz *y, const fmpz *x, long v, long len, 
-                  const fmpz *mod, long lenmod, 
+                  const fmpz *mod, const fmpz* invmod, long lenmod, 
                   const fmpz_t p, long N)
 {
     const long d = lenmod - 1;
@@ -117,7 +117,7 @@ _qadic_dense_exp_bsplit(fmpz *y, const fmpz *x, long v, long len,
         fmpz_init(Q);
         fmpz_init(R);
 
-        _qadic_dense_exp_bsplit_series(P, Q, T, x, len, 1, n, mod, lenmod);
+        _qadic_dense_exp_bsplit_series(P, Q, T, x, len, 1, n, mod, invmod, lenmod);
 
         fmpz_add(T + 0, T + 0, Q);  /* (T,Q) := (T,Q) + 1 */
 
@@ -137,7 +137,7 @@ _qadic_dense_exp_bsplit(fmpz *y, const fmpz *x, long v, long len,
 }
 
 void _qadic_dense_exp_balanced(fmpz *rop, const fmpz *x, long v, long len, 
-                         const fmpz *mod, long lenmod, 
+                         const fmpz *mod, const fmpz *invmod, long lenmod, 
                          const fmpz_t p, long N, const fmpz_t pN)
 {
     const long d = lenmod - 1;
@@ -173,9 +173,9 @@ void _qadic_dense_exp_balanced(fmpz *rop, const fmpz *x, long v, long len,
 
         if (!_fmpz_vec_is_zero(r, d))
         {
-            _qadic_dense_exp_bsplit(r, r, w, d, mod, lenmod, p, N);
+            _qadic_dense_exp_bsplit(r, r, w, d, mod, invmod, lenmod, p, N);
             _fmpz_poly_mul(s, rop, d, r, d);
-            _fmpz_poly_dense_reduce(rop, s, 2*d - 1, mod, lenmod);
+            _qadic_dense_reduce_no_mod(rop, s, 2*d - 1, mod, invmod, lenmod);
             _fmpz_vec_scalar_mod_fmpz(rop, rop, d, pN);
         }
 
@@ -218,7 +218,7 @@ int qadic_dense_exp_balanced(qadic_dense_t rop, const qadic_dense_t op, const qa
             padic_poly_fit_length(rop, d);
 
             _qadic_dense_exp_balanced(rop->coeffs, op->coeffs, v, op->length, 
-                                ctx->mod->coeffs, d + 1, p, N, pN);
+                                      ctx->mod->coeffs, ctx->invmod->coeffs, d + 1, p, N, pN);
             rop->val = 0;
 
             _padic_poly_set_length(rop, d);
