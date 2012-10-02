@@ -64,8 +64,8 @@ _qadic_dense_compose_mod_rectangular(fmpz *rop,
         for (i = 2; i <= B; i++)
         {
             _fmpz_poly_mul(t, pows + (i - 1) * d, d, op2, len2);
-            _qadic_dense_reduce_no_mod(pows + i * d, t, d + len2 - 1, mod, invmod, lenmod);
-            _fmpz_vec_scalar_mod_fmpz(pows + i * d, pows + i * d, d, p);
+            _qadic_dense_reduce_no_mod(s, t, d + len2 - 1, mod, invmod, lenmod);
+            _fmpz_vec_scalar_mod_fmpz(pows + i * d, s, d, p);
         }
 
         _fmpz_vec_zero(rop, d);
@@ -73,7 +73,7 @@ _qadic_dense_compose_mod_rectangular(fmpz *rop,
         for (i = (len1 + B - 1) / B - 1; i >= 0; i--)
         {
             _fmpz_poly_mul(s, rop, d, pows + B * d, d);
-            _qadic_dense_reduce_no_mod(t, s, 2 * d - 1, mod, invmod, lenmod);
+            _qadic_dense_reduce(t, s, 2 * d - 1, mod, invmod, lenmod, p);
 
             _fmpz_vec_set(rop, t, d);
             fmpz_add(rop + 0, rop + 0, op1 + i*B);
@@ -146,7 +146,7 @@ _qadic_dense_compose_mod_horner(fmpz *rop,
     Does not support aliasing.
  */
 
-static void 
+void 
 _qadic_dense_compose_mod(fmpz *rop, 
                            const fmpz *op1, long len1, 
                            const fmpz *op2, long len2, 
@@ -268,6 +268,11 @@ void _qadic_dense_frobenius_a(fmpz *rop, long exp,
     flint_free(e);
 }
 
+/*
+    Sets (rop, 2d-1) to the image of (op, len) under the Frobenius operator 
+    raised to the e-th power.
+ */
+
 void _qadic_dense_frobenius(fmpz *rop, const fmpz *op, long len, long e, 
                   const fmpz *mod, const fmpz *invmod, long lenmod, 
                   const fmpz_t p, long N)
@@ -277,7 +282,7 @@ void _qadic_dense_frobenius(fmpz *rop, const fmpz *op, long len, long e,
     if (len == 1)  /* op is in Zp, not just Zq */
     {
         _fmpz_vec_set(rop, op, len);
-        _fmpz_vec_zero(rop + len, d - len);
+        _fmpz_vec_zero(rop + len, (2*d - 1)  - len);
     }
     else if (N == 1)
     {
@@ -328,6 +333,29 @@ void qadic_dense_frobenius(qadic_dense_t rop, const qadic_dense_t op, long e, co
     else
     {
         fmpz *t;
+        fmpz *mod, *invmod;
+
+        if (op->val >= 0)
+        {
+            int alloc;
+            fmpz_t pow;
+
+            alloc = _padic_ctx_pow_ui(pow, N - op->val, &ctx->pctx);
+
+            mod = _fmpz_vec_init(d + 1);
+            _fmpz_vec_scalar_mod_fmpz(mod, ctx->mod->coeffs, d + 1, pow);
+            invmod = _fmpz_vec_init(d + 1);
+            _fmpz_vec_scalar_mod_fmpz(invmod, ctx->invmod->coeffs, d + 1, pow);
+
+            if (alloc)
+                fmpz_clear(pow);
+        }
+        else
+        {
+            mod = ctx->mod->coeffs;
+            invmod = _fmpz_vec_init(d + 1);
+            _qadic_dense_ctx_init_inv(invmod, mod, &ctx->pctx, d, N - op->val);
+        }
 
         if (rop == op)
         {
@@ -340,8 +368,18 @@ void qadic_dense_frobenius(qadic_dense_t rop, const qadic_dense_t op, long e, co
         }
 
         _qadic_dense_frobenius(t, op->coeffs, op->length, e,
-                               ctx->mod->coeffs, ctx->invmod->coeffs, d + 1,
+                               mod, invmod, d + 1,
                                (&ctx->pctx)->p, N - op->val);
+
+        if (op->val >= 0)
+        {
+            flint_free(mod);
+            flint_free(invmod);
+        }
+        else
+        {
+            flint_free(invmod);
+        }
 
         if (rop == op)
         {

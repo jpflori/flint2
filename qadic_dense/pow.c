@@ -160,7 +160,7 @@ void qadic_dense_pow(qadic_dense_t x, const qadic_dense_t y, const fmpz_t e, con
         else if (fmpz_is_one(e))
         {
             qadic_dense_set(x, y);
-            qadic_dense_reduce(x, ctx);
+            /*qadic_dense_reduce(x, ctx);*/
         }
         else 
         {

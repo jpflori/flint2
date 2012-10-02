@@ -146,7 +146,7 @@ void _qadic_dense_exp_balanced(fmpz *rop, const fmpz *x, long v, long len,
     fmpz *r, *s, *t;
     long i, w;
 
-    r = _fmpz_vec_init(d);
+    r = _fmpz_vec_init(2*d - 1);
     s = _fmpz_vec_init(2*d - 1);
     t = _fmpz_vec_init(d);
     fmpz_init(pw);
@@ -175,14 +175,14 @@ void _qadic_dense_exp_balanced(fmpz *rop, const fmpz *x, long v, long len,
         {
             _qadic_dense_exp_bsplit(r, r, w, d, mod, invmod, lenmod, p, N);
             _fmpz_poly_mul(s, rop, d, r, d);
-            _qadic_dense_reduce_no_mod(rop, s, 2*d - 1, mod, invmod, lenmod);
-            _fmpz_vec_scalar_mod_fmpz(rop, rop, d, pN);
+            _qadic_dense_reduce_no_mod(r, s, 2*d - 1, mod, invmod, lenmod);
+            _fmpz_vec_scalar_mod_fmpz(rop, r, d, pN);
         }
 
         w *= 2;
     }
 
-    _fmpz_vec_clear(r, d);
+    _fmpz_vec_clear(r, 2*d - 1);
     _fmpz_vec_clear(s, 2*d - 1);
     _fmpz_vec_clear(t, d);
     fmpz_clear(pw);

@@ -73,7 +73,7 @@ int fmpz_poly_init_conway(fmpz_poly_t poly,
             char *ptr;
 
             /* Initialization */
-            fmpz_poly_init2(poly, d + 1);
+            fmpz_poly_init2(poly, d + 2);
 
             /* Read coefficients */
             ptr = tmp;
@@ -128,7 +128,7 @@ void qadic_dense_ctx_init_conway(qadic_dense_ctx_t ctx,
     /* Precomputed inverse for fast modular reduction */
     qadic_dense_ctx_init_inv(ctx, &ctx->pctx, d, N);
 
-    ctx->var = flint_malloc(strlen(var));
+    ctx->var = flint_malloc(strlen(var) + 1);
     strcpy(ctx->var, var);
     return;
 }

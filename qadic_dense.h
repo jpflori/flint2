@@ -19,7 +19,7 @@
 =============================================================================*/
 /******************************************************************************
 
-    Copyright (C) 2011 Sebastian Pancratz
+    Copyright (C) 2011, 2012 Sebastian Pancratz
  
 ******************************************************************************/
 
@@ -48,6 +48,8 @@
 #define qadic_dense_t padic_poly_t
 
 #define qadic_dense_struct padic_poly_struct
+
+#define qadic_dense_val(op) ((op)->val)
 
 typedef struct
 {
@@ -135,8 +137,8 @@ _qadic_dense_reduce_xxx(fmpz* R, fmpz *A, long lenA,
     if (lenA >= lenB)
     {
         /* 1L should be replaced by a proper inverse of the leading coefficient... */
-        long one = 1L;
-        _fmpz_mod_poly_rem(R, A, lenA, B, lenB, &one, pN);
+        const fmpz_t p1 = {1L};
+        _fmpz_mod_poly_rem(R, A, lenA, B, lenB, p1, pN);
         /*_qadic_dense_reduce_no_mod(R, A, lenA, B, lenB);
           _fmpz_vec_scalar_mod_fmpz(R, R, lenA, pN);*/
     }
@@ -196,7 +198,6 @@ _qadic_dense_reduce(fmpz* R, fmpz *A, long lenA,
         fmpz *Arev, *Q;
 
         Q = _fmpz_vec_init(m + 1);
-
         Arev = flint_malloc(lenA * sizeof(fmpz));
         for (i = 0; i < lenA; i++)
         {
@@ -204,12 +205,14 @@ _qadic_dense_reduce(fmpz* R, fmpz *A, long lenA,
         }
 
         _fmpz_poly_mullow(Q, Arev, lenA, Binv, lenB, m + 1);
+        _fmpz_vec_scalar_mod_fmpz(Q, Q, m + 1, pN);
         _fmpz_poly_reverse(Q, Q, m + 1, m + 1);
 
-        _fmpz_poly_mullow(R, Q, m + 1, B, lenB, lenB);
+        _fmpz_poly_mul(R, Q, m + 1, B, lenB);
         _fmpz_poly_sub(R, A, lenA, R, lenB);
 
         _fmpz_vec_scalar_mod_fmpz(R, R, lenB, pN);
+        _fmpz_vec_zero(R + lenB, m);
 
         _fmpz_vec_clear(Q, m + 1);
 
@@ -358,11 +361,6 @@ qadic_dense_randtest_int(qadic_dense_t x, flint_rand_t state, const qadic_dense_
 
 /* Assignments and conversions ***********************************************/
 
-static __inline__ void qadic_dense_set(qadic_dense_t x, const qadic_dense_t y)
-{
-    padic_poly_set(x, y);
-}
-
 static __inline__ void qadic_dense_zero(qadic_dense_t x)
 {
     padic_poly_zero(x);
@@ -371,6 +369,38 @@ static __inline__ void qadic_dense_zero(qadic_dense_t x)
 static __inline__ void qadic_dense_one(qadic_dense_t x, const qadic_dense_ctx_t ctx)
 {
     padic_poly_one(x, &ctx->pctx);
+}
+
+static __inline__ void qadic_dense_gen(qadic_dense_t x, const qadic_dense_ctx_t ctx)
+{
+    const long d = qadic_dense_ctx_degree(ctx);
+
+    if (d > 1)
+    {
+        if ((&ctx->pctx)->N > 0)
+        {
+            padic_poly_fit_length(x, 2);
+            fmpz_zero(x->coeffs + 0);
+            fmpz_one(x->coeffs + 1);
+            _padic_poly_set_length(x, 2);
+            x->val = 0;
+        }
+        else
+        {
+            padic_poly_zero(x);
+        }
+    }
+    else
+    {
+        printf("Exception (qadic_dense_gen).  Extension degree d = 1.\n");
+        abort();
+    }
+}
+
+static __inline__ 
+void qadic_dense_set_ui(qadic_dense_t rop, ulong op, const qadic_dense_ctx_t ctx)
+{
+    padic_poly_set_ui(rop, op, &ctx->pctx);
 }
 
 static __inline__ int 
@@ -396,6 +426,14 @@ qadic_dense_get_padic(padic_t rop, const qadic_dense_t op, const qadic_dense_ctx
         return 1;
     }
 }
+
+static __inline__ void qadic_dense_set(qadic_dense_t x, const qadic_dense_t y)
+{
+    padic_poly_set(x, y);
+}
+
+void qadic_dense_set_fmpz_poly(qadic_dense_t rop, const fmpz_poly_t op, 
+                         const qadic_dense_ctx_t ctx);
 
 /* Comparison ****************************************************************/
 

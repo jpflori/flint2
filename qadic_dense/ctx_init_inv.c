@@ -30,7 +30,7 @@ void _qadic_dense_ctx_init_inv(fmpz *invmod, const fmpz *mod,
                                const padic_ctx_t pctx, long d, long N)
 {
     /* We assume for now the leading coefficient of the modulus is one */
-    const long one = 1L;
+    const fmpz_t one = {1L};
     int alloc;
     long i;
     fmpz_t pow;
@@ -44,7 +44,7 @@ void _qadic_dense_ctx_init_inv(fmpz *invmod, const fmpz *mod,
         revmod[i] = mod[d - i];
     }
 
-    _fmpz_mod_poly_inv_series_newton(invmod, revmod, d + 1, &one, pow);
+    _fmpz_mod_poly_inv_series_newton(invmod, revmod, d + 1, one, pow);
 
     flint_free(revmod);
 
