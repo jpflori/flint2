@@ -40,7 +40,7 @@ void padic_poly_reduce(padic_poly_t poly, const padic_ctx_t ctx)
         {
             if (!COEFF_IS_MPZ(*ctx->p) && *ctx->p == 2L)
             {
-                _fmpz_vec_scalar_fdiv_r_2exp(poly->coeffs, poly->coeffs, poly->length, ctx->N);
+                _fmpz_vec_scalar_fdiv_r_2exp(poly->coeffs, poly->coeffs, poly->length, ctx->N - poly->val);
             }
             else
             {

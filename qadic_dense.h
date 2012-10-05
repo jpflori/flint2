@@ -171,7 +171,10 @@ _qadic_dense_reduce_no_mod(fmpz* R, const fmpz *A, long lenA,
         _fmpz_poly_mullow(Q, Arev, lenA, Binv, lenB, m + 1);
         _fmpz_poly_reverse(Q, Q, m + 1, m + 1);
 
-        _fmpz_poly_mullow(R, Q, m + 1, B, lenB, lenB);
+        if (m < lenB)
+            _fmpz_poly_mullow(R, B, lenB, Q, m + 1, lenB);
+        else
+            _fmpz_poly_mullow(R, Q, m + 1, B, lenB, lenB);
         _fmpz_poly_sub(R, A, lenA, R, lenB);
 
         _fmpz_vec_clear(Q, m + 1);
@@ -208,7 +211,10 @@ _qadic_dense_reduce(fmpz* R, fmpz *A, long lenA,
         _fmpz_vec_scalar_mod_fmpz(Q, Q, m + 1, pN);
         _fmpz_poly_reverse(Q, Q, m + 1, m + 1);
 
-        _fmpz_poly_mul(R, Q, m + 1, B, lenB);
+        if (m < lenB)
+            _fmpz_poly_mullow(R, B, lenB, Q, m + 1, lenB);
+        else
+            _fmpz_poly_mullow(R, Q, m + 1, B, lenB, lenB);
         _fmpz_poly_sub(R, A, lenA, R, lenB);
 
         _fmpz_vec_scalar_mod_fmpz(R, R, lenB, pN);
@@ -245,10 +251,13 @@ _qadic_dense_reduce_char_2(fmpz* R, fmpz *A, long lenA,
             Arev[i] = A[lenA - 1 - i];
         }
 
-        _fmpz_poly_mullow(Q, Arev, lenA, Binv, lenB, m + 1);
+        _fmpz_poly_mullow_classical(Q, Arev, lenA, Binv, lenB, m + 1);
         _fmpz_poly_reverse(Q, Q, m + 1, m + 1);
 
-        _fmpz_poly_mullow(R, Q, m + 1, B, lenB, lenB);
+        if (m < lenB)
+            _fmpz_poly_mullow(R, B, lenB, Q, m + 1, lenB);
+        else
+            _fmpz_poly_mullow(R, Q, m + 1, B, lenB, lenB);
         _fmpz_poly_sub(R, A, lenA, R, lenB);
 
         _fmpz_vec_scalar_fdiv_r_2exp(R, R, lenB, N);
@@ -280,10 +289,9 @@ static __inline__ void qadic_dense_reduce(qadic_dense_t x, const qadic_dense_ctx
 
         _qadic_dense_reduce_char_2(t, x->coeffs, x->length,
                             ctx->mod->coeffs, ctx->invmod->coeffs, d + 1,
-                            N);
-        _fmpz_vec_set(x->coeffs, t, d);
-        /* _padic_poly_set_length(x, FLINT_MIN(x->length, d)); */
-        _padic_poly_set_length(x, d);
+                            N - x->val);
+        _fmpz_vec_set(x->coeffs, t, FLINT_MIN(x->length, d));
+        _padic_poly_set_length(x, FLINT_MIN(x->length, d));
         _padic_poly_normalise(x);
         padic_poly_canonicalise(x, (&ctx->pctx)->p);
 
@@ -302,17 +310,13 @@ static __inline__ void qadic_dense_reduce(qadic_dense_t x, const qadic_dense_ctx
         _qadic_dense_reduce(t, x->coeffs, x->length,
                             ctx->mod->coeffs, ctx->invmod->coeffs, d + 1,
                             pow);
-        _fmpz_vec_set(x->coeffs, t, d);
-        /* _padic_poly_set_length(x, FLINT_MIN(x->length, d)); */
-        _padic_poly_set_length(x, d);
+        _fmpz_vec_set(x->coeffs, t, FLINT_MIN(x->length, d));
+        _padic_poly_set_length(x, FLINT_MIN(x->length, d));
         _padic_poly_normalise(x);
         padic_poly_canonicalise(x, (&ctx->pctx)->p);
 
         if (alloc)
             fmpz_clear(pow);
-
-        _padic_poly_normalise(x);
-        padic_poly_canonicalise(x, (&ctx->pctx)->p);
 
         _fmpz_vec_clear(t, x->length);
     }
