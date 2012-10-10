@@ -503,6 +503,8 @@ void _qadic_dense_inv(fmpz *rop, const fmpz *op, long len,
 
 void qadic_dense_inv(qadic_dense_t x, const qadic_dense_t y, const qadic_dense_ctx_t ctx);
 
+void qadic_dense_sqr(qadic_dense_t x, const qadic_dense_t y, const qadic_dense_ctx_t ctx);
+
 void _qadic_dense_pow(fmpz *rop, const fmpz *op, long len, const fmpz_t e, 
                 const fmpz *mod, const fmpz *invmod, long lenmod, 
                 const fmpz_t p);
