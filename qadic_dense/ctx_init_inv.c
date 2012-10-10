@@ -38,13 +38,13 @@ void _qadic_dense_ctx_init_inv(fmpz *invmod, const fmpz *mod,
 
     alloc = _padic_ctx_pow_ui(pow, N, pctx);
 
-    revmod = flint_malloc((d + 1) * sizeof(fmpz));
-    for (i = 0; i < d + 1; i++)
+    revmod = flint_malloc((d - 1) * sizeof(fmpz));
+    for (i = 0; i < d - 1; i++)
     {
         revmod[i] = mod[d - i];
     }
 
-    _fmpz_mod_poly_inv_series_newton(invmod, revmod, d + 1, one, pow);
+    _fmpz_mod_poly_inv_series_newton(invmod, revmod, d - 1, one, pow);
 
     flint_free(revmod);
 
@@ -55,8 +55,8 @@ void _qadic_dense_ctx_init_inv(fmpz *invmod, const fmpz *mod,
 void qadic_dense_ctx_init_inv(qadic_dense_ctx_t ctx,
                               const padic_ctx_t pctx, long d, long N)
 {
-    padic_poly_init2(ctx->invmod, d + 1);
+    padic_poly_init2(ctx->invmod, d - 1);
     _qadic_dense_ctx_init_inv(ctx->invmod->coeffs, ctx->mod->coeffs, pctx, d, N);
-    _padic_poly_set_length(ctx->invmod, d + 1);
+    _padic_poly_set_length(ctx->invmod, d - 1);
     _padic_poly_normalise(ctx->invmod);
 }
