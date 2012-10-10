@@ -32,6 +32,23 @@
  */
 
 static 
+void _qadic_dense_mul_char_2(fmpz *rop, 
+                const fmpz *op1, long len1, const fmpz *op2, long len2, 
+                             const fmpz *mod, const fmpz *invmod, long lenmod, const fmpz_t pN, long N)
+{
+    fmpz *t;
+
+    t = _fmpz_vec_init(len1 + len2 - 1);
+
+    /*_fmpz_mod_poly_mul(t, op1, len1, op2, len2, pN);*/
+    _fmpz_poly_mul(t, op1, len1, op2, len2);
+    _fmpz_vec_scalar_fdiv_r_2exp(t, t, len1 + len2 - 1, N);
+    _qadic_dense_reduce_char_2(rop, t, len1 + len2 - 1, mod, invmod, lenmod, N);
+
+    _fmpz_vec_clear(t, len1 + len2 - 1);
+}
+
+static 
 void _qadic_dense_mul(fmpz *rop, 
                 const fmpz *op1, long len1, const fmpz *op2, long len2, 
                 const fmpz *mod, const fmpz *invmod, long lenmod, const fmpz_t pN)
@@ -60,15 +77,68 @@ void qadic_dense_mul(qadic_dense_t x, const qadic_dense_t y, const qadic_dense_t
     {
         qadic_dense_zero(x);
     }
-    else
+    else if (*(&ctx->pctx)->p == 2L)
     {
-        fmpz *t;
+        fmpz *t, *mod, *invmod;
         fmpz_t pN;
         int alloc;
 
         x->val = y->val + z->val;
 
         alloc = _padic_ctx_pow_ui(pN, N - x->val, &ctx->pctx);
+
+        mod    = _fmpz_vec_init(d + 1);
+        invmod = _fmpz_vec_init(d + 1);
+
+        _fmpz_vec_scalar_fdiv_r_2exp(mod, ctx->mod->coeffs, d + 1, N - x->val);
+        _fmpz_vec_scalar_fdiv_r_2exp(invmod, ctx->invmod->coeffs, d + 1, N - x->val);
+
+        if (x == y || x == z)
+        {
+            t = _fmpz_vec_init(lenx);
+        }
+        else
+        {
+            padic_poly_fit_length(x, lenx);
+            t = x->coeffs;
+        }
+
+        if (leny >= lenz)
+            _qadic_dense_mul_char_2(t, y->coeffs, leny, z->coeffs, lenz,
+                                    mod, invmod, d + 1, pN, N - x->val);
+        else
+            _qadic_dense_mul_char_2(t, z->coeffs, lenz, y->coeffs, leny,
+                                    mod, invmod, d + 1, pN, N - x->val);
+
+        if (x == y || x == z)
+        {
+            _fmpz_vec_clear(x->coeffs, x->alloc);
+            x->coeffs = t;
+            x->alloc  = lenx;
+        }
+
+        _padic_poly_set_length(x, FLINT_MIN(lenx, d));
+        _padic_poly_normalise(x);
+
+        _fmpz_vec_clear(mod, d + 1);
+        _fmpz_vec_clear(invmod, d + 1);
+
+        if (alloc)
+            fmpz_clear(pN);
+    } else {
+        fmpz *t, *mod, *invmod;
+        fmpz_t pN;
+        int alloc;
+
+        x->val = y->val + z->val;
+
+        alloc = _padic_ctx_pow_ui(pN, N - x->val, &ctx->pctx);
+
+        mod    = _fmpz_vec_init(d + 1);
+        invmod = _fmpz_vec_init(d + 1);
+
+        _fmpz_vec_scalar_mod_fmpz(mod, ctx->mod->coeffs, d + 1, pN);
+        _fmpz_vec_scalar_mod_fmpz(invmod, ctx->invmod->coeffs, d + 1, pN);
 
         if (x == y || x == z)
         {
@@ -82,10 +152,10 @@ void qadic_dense_mul(qadic_dense_t x, const qadic_dense_t y, const qadic_dense_t
 
         if (leny >= lenz)
             _qadic_dense_mul(t, y->coeffs, leny, z->coeffs, lenz,
-                             ctx->mod->coeffs, ctx->invmod->coeffs, d + 1, pN);
+                             mod, invmod, d + 1, pN);
         else
             _qadic_dense_mul(t, z->coeffs, lenz, y->coeffs, leny,
-                             ctx->mod->coeffs, ctx->invmod->coeffs, d + 1, pN);
+                             mod, invmod, d + 1, pN);
 
         if (x == y || x == z)
         {
@@ -96,6 +166,9 @@ void qadic_dense_mul(qadic_dense_t x, const qadic_dense_t y, const qadic_dense_t
 
         _padic_poly_set_length(x, FLINT_MIN(lenx, d));
         _padic_poly_normalise(x);
+
+        _fmpz_vec_clear(mod, d + 1);
+        _fmpz_vec_clear(invmod, d + 1);
 
         if (alloc)
             fmpz_clear(pN);
