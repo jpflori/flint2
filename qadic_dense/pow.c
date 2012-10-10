@@ -303,8 +303,16 @@ void qadic_dense_pow(qadic_dense_t x, const qadic_dense_t y, const fmpz_t e, con
             const long d = qadic_dense_ctx_degree(ctx);
             fmpz *t, *mod, *invmod;
 
-            mod = _fmpz_vec_init(d + 1);
-            invmod = _fmpz_vec_init(d - 1);
+            if (fmpz_get_si(val) > 0)
+            {
+                mod = _fmpz_vec_init(d + 1);
+                invmod = _fmpz_vec_init(d - 1);
+            }
+            else
+            {
+                mod = ctx->mod->coeffs;
+                invmod = ctx->invmod->coeffs;
+            }
 
             _fmpz_vec_scalar_fdiv_r_2exp(mod, ctx->mod->coeffs, d + 1, N - fmpz_get_si(val));
             _fmpz_vec_scalar_fdiv_r_2exp(invmod, ctx->invmod->coeffs, d - 1, N - fmpz_get_si(val));
@@ -336,8 +344,11 @@ void qadic_dense_pow(qadic_dense_t x, const qadic_dense_t y, const fmpz_t e, con
             }
             _padic_poly_normalise(x);
 
-            _fmpz_vec_clear(mod, d + 1);
-            _fmpz_vec_clear(invmod, d - 1);
+            if (fmpz_get_si(val) > 0)
+            {
+                _fmpz_vec_clear(mod, d + 1);
+                _fmpz_vec_clear(invmod, d - 1);
+            }
         }
         else 
         {
@@ -348,11 +359,19 @@ void qadic_dense_pow(qadic_dense_t x, const qadic_dense_t y, const fmpz_t e, con
 
             alloc = _padic_ctx_pow_ui(pow, N - fmpz_get_si(val), &ctx->pctx);
 
-            mod = _fmpz_vec_init(d + 1);
-            invmod = _fmpz_vec_init(d - 1);
+            if (fmpz_get_si(val) > 0)
+            {
+                mod = _fmpz_vec_init(d + 1);
+                invmod = _fmpz_vec_init(d - 1);
 
-            _fmpz_vec_scalar_mod_fmpz(mod, ctx->mod->coeffs, d + 1, pow);
-            _fmpz_vec_scalar_mod_fmpz(invmod, ctx->invmod->coeffs, d - 1, pow);
+                _fmpz_vec_scalar_mod_fmpz(mod, ctx->mod->coeffs, d + 1, pow);
+                _fmpz_vec_scalar_mod_fmpz(invmod, ctx->invmod->coeffs, d - 1, pow);
+            }
+            else
+            {
+                mod = ctx->mod->coeffs;
+                invmod = ctx->invmod->coeffs;
+            }
 
             if (x == y)
             {
@@ -381,8 +400,11 @@ void qadic_dense_pow(qadic_dense_t x, const qadic_dense_t y, const fmpz_t e, con
             }
             _padic_poly_normalise(x);
 
-            _fmpz_vec_clear(mod, d + 1);
-            _fmpz_vec_clear(invmod, d - 1);
+            if (fmpz_get_si(val) > 0)
+            {
+                _fmpz_vec_clear(mod, d + 1);
+                _fmpz_vec_clear(invmod, d - 1);
+            }
 
             if (alloc)
                 fmpz_clear(pow);
