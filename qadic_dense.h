@@ -277,8 +277,9 @@ static __inline__ void qadic_dense_reduce(qadic_dense_t x, const qadic_dense_ctx
 {
     const long N = (&ctx->pctx)->N;
     const long d = qadic_dense_ctx_degree(ctx);
+    const long val = x->val;
 
-    if (x->length == 0 || x->val >= N)
+    if (x->length == 0 || val >= N)
     {
         padic_poly_zero(x);
     }
@@ -288,13 +289,13 @@ static __inline__ void qadic_dense_reduce(qadic_dense_t x, const qadic_dense_ctx
 
         t      = _fmpz_vec_init(x->length);
 
-        if (x->val > 0)
+        if (val > 0)
         {
             mod    = _fmpz_vec_init(d + 1);
             invmod = _fmpz_vec_init(d - 1);
 
-            _fmpz_vec_scalar_fdiv_r_2exp(mod, ctx->mod->coeffs, d + 1, N - x->val);
-            _fmpz_vec_scalar_fdiv_r_2exp(invmod, ctx->invmod->coeffs, d - 1, N - x->val);
+            _fmpz_vec_scalar_fdiv_r_2exp(mod, ctx->mod->coeffs, d + 1, N - val);
+            _fmpz_vec_scalar_fdiv_r_2exp(invmod, ctx->invmod->coeffs, d - 1, N - val);
         }
         else
         {
@@ -304,14 +305,15 @@ static __inline__ void qadic_dense_reduce(qadic_dense_t x, const qadic_dense_ctx
 
         _qadic_dense_reduce_char_2(t, x->coeffs, x->length,
                             mod, invmod, d + 1,
-                            N - x->val);
+                            N - val);
         _fmpz_vec_set(x->coeffs, t, FLINT_MIN(x->length, d));
         _padic_poly_set_length(x, FLINT_MIN(x->length, d));
         _padic_poly_normalise(x);
         padic_poly_canonicalise(x, (&ctx->pctx)->p);
 
         _fmpz_vec_clear(t, x->length);
-        if (x->val > 0)
+
+        if (val > 0)
         {
             _fmpz_vec_clear(mod, d + 1);
             _fmpz_vec_clear(invmod, d - 1);
@@ -325,9 +327,9 @@ static __inline__ void qadic_dense_reduce(qadic_dense_t x, const qadic_dense_ctx
 
         t      = _fmpz_vec_init(x->length);
 
-        alloc = _padic_ctx_pow_ui(pow, (&ctx->pctx)->N - x->val, &ctx->pctx);
+        alloc = _padic_ctx_pow_ui(pow, (&ctx->pctx)->N - val, &ctx->pctx);
 
-        if (x->val)
+        if (val)
         {
             mod    = _fmpz_vec_init(d + 1);
             invmod = _fmpz_vec_init(d - 1);
@@ -353,7 +355,7 @@ static __inline__ void qadic_dense_reduce(qadic_dense_t x, const qadic_dense_ctx
             fmpz_clear(pow);
 
         _fmpz_vec_clear(t, x->length);
-        if (x->val > 0)
+        if (val > 0)
         {
             _fmpz_vec_clear(mod, d + 1);
             _fmpz_vec_clear(invmod, d - 1);
