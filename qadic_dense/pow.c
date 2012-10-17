@@ -27,8 +27,7 @@
 #include "qadic_dense.h"
 
 void _qadic_dense_pow_char_2(fmpz *rop, const fmpz *op, long len, const fmpz_t e, 
-                   const fmpz *mod, const fmpz *invmod, long lenmod, 
-                   long N)
+                   const fmpz *mod, const fmpz *invmod, long lenmod, long N)
 {
     const long d = lenmod - 1;
 
@@ -146,8 +145,7 @@ void _qadic_dense_pow_char_2(fmpz *rop, const fmpz *op, long len, const fmpz_t e
 }
 
 void _qadic_dense_pow(fmpz *rop, const fmpz *op, long len, const fmpz_t e, 
-                   const fmpz *mod, const fmpz *invmod, long lenmod, 
-                   const fmpz_t p)
+                   const fmpz *mod, const fmpz *invmod, long lenmod, const fmpz_t p)
 {
     const long d = lenmod - 1;
 

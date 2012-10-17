@@ -26,6 +26,61 @@
 #include "fmpz_mod_poly.h"
 #include "padic_poly.h"
 
+void _padic_poly_add_char_2(fmpz *rop, long *val,
+                          const fmpz *op1, long val1, long len1,
+                          const fmpz *op2, long val2, long len2,
+                          const padic_ctx_t ctx)
+{
+    const long len = FLINT_MAX(len1, len2);
+
+    *val = FLINT_MIN(val1, val2);
+
+    if (val1 == val2)
+    {
+        _fmpz_poly_add(rop, op1, len1, op2, len2);
+        _fmpz_vec_scalar_fdiv_r_2exp(rop, rop, len, ctx->N - *val);
+    }
+    else  /* => (op1 != op2) */
+    {
+        long exp;
+
+        if (val1 < val2)  /* F := p^g (G + p^{h-g} H) */
+        {
+            exp = val2 - val1;
+
+            if (rop == op1)
+            {
+                _fmpz_vec_zero(rop + len1, len2 - len1);
+                _fmpz_vec_scalar_addmul_si_2exp(rop, op2, len2, 1L, exp);
+            }
+            else
+            {
+                _fmpz_vec_scalar_mul_2exp(rop, op2, len2, exp);
+                _fmpz_poly_add(rop, op1, len1, rop, len2);
+            }
+        }
+        else  /* F := p^h (p^{g-h} G + H) */
+        {
+            exp = val1 - val2;
+
+            if (rop == op2)
+            {
+                _fmpz_vec_zero(rop + len2, len1 - len2);
+                _fmpz_vec_scalar_addmul_si_2exp(rop, op1, len1, 1L, exp);
+            }
+            else
+            {
+                _fmpz_vec_scalar_mul_2exp(rop, op1, len1, exp);
+                _fmpz_poly_add(rop, rop, len1, op2, len2);
+            }
+        }
+
+        _fmpz_vec_scalar_fdiv_r_2exp(rop, rop, len, ctx->N - *val);
+    }
+
+    _padic_poly_canonicalise(rop, val, len, ctx->p);
+}
+
 void _padic_poly_add(fmpz *rop, long *val, 
                      const fmpz *op1, long val1, long len1, 
                      const fmpz *op2, long val2, long len2, 
@@ -110,7 +165,11 @@ void padic_poly_add(padic_poly_t f,
 
     padic_poly_fit_length(f, lenF);
 
-    _padic_poly_add(f->coeffs, &(f->val), g->coeffs, g->val, lenG, 
+    if (!COEFF_IS_MPZ(*ctx->p) && (*ctx->p == 2L))
+        _padic_poly_add_char_2(f->coeffs, &(f->val), g->coeffs, g->val, lenG, 
+                                          h->coeffs, h->val, lenH, ctx);
+    else
+        _padic_poly_add(f->coeffs, &(f->val), g->coeffs, g->val, lenG, 
                                           h->coeffs, h->val, lenH, ctx);
 
     _padic_poly_set_length(f, lenF);

@@ -272,6 +272,11 @@ void padic_poly_scalar_mul_padic(padic_poly_t rop, const padic_poly_t op,
 
 /*  Multiplication  **********************************************************/
 
+void _padic_poly_mul_char2(fmpz *rop, long *rval, 
+                           const fmpz *op1, long val1, long len1, 
+                           const fmpz *op2, long val2, long len2, 
+                           const padic_ctx_t ctx);
+
 void _padic_poly_mul(fmpz *rop, long *rval, 
                      const fmpz *op1, long val1, long len1, 
                      const fmpz *op2, long val2, long len2, 

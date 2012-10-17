@@ -25,6 +25,17 @@
 
 #include "padic_poly.h"
 
+void _padic_poly_mul_char_2(fmpz *rop, long *rval, 
+                            const fmpz *op1, long val1, long len1, 
+                            const fmpz *op2, long val2, long len2, 
+                            const padic_ctx_t ctx)
+{
+    *rval = val1 + val2;
+
+    _fmpz_poly_mul(rop, op1, len1, op2, len2);
+    _fmpz_vec_scalar_fdiv_r_2exp(rop, rop, len1 + len2 - 1, ctx->N - *rval);
+}
+
 void _padic_poly_mul(fmpz *rop, long *rval, 
                      const fmpz *op1, long val1, long len1, 
                      const fmpz *op2, long val2, long len2, 
@@ -55,6 +66,37 @@ void padic_poly_mul(padic_poly_t f,
     if (lenG == 0 || lenH == 0 || g->val + h->val >= ctx->N)
     {
         padic_poly_zero(f);
+    }
+    else if (!COEFF_IS_MPZ(*ctx->p) && *ctx->p == 2L)
+    {
+        fmpz *t;
+
+        if (f == g || f == h)
+        {
+            t = _fmpz_vec_init(lenF);
+        }
+        else
+        {
+            padic_poly_fit_length(f, lenF);
+            t = f->coeffs;
+        }
+
+        if (lenG >= lenH)
+            _padic_poly_mul_char_2(t, &(f->val), g->coeffs, g->val, lenG, 
+                                   h->coeffs, h->val, lenH, ctx);
+        else
+            _padic_poly_mul_char_2(t, &(f->val), h->coeffs, h->val, lenH, 
+                                   g->coeffs, g->val, lenG, ctx);
+
+        if (f == g || f == h)
+        {
+            _fmpz_vec_clear(f->coeffs, f->alloc);
+            f->coeffs = t;
+            f->alloc  = lenF;
+        }
+
+        _padic_poly_set_length(f, lenF);
+        _padic_poly_normalise(f);
     }
     else
     {

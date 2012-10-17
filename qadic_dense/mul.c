@@ -31,7 +31,6 @@
     len1 + len2 - 1.
  */
 
-static 
 void _qadic_dense_mul_char_2(fmpz *rop, 
                              const fmpz *op1, long len1, const fmpz *op2, long len2, 
                              const fmpz *mod, const fmpz *invmod, long lenmod, long N)
@@ -48,7 +47,6 @@ void _qadic_dense_mul_char_2(fmpz *rop,
     _fmpz_vec_clear(t, len1 + len2 - 1);
 }
 
-static 
 void _qadic_dense_mul(fmpz *rop, 
                 const fmpz *op1, long len1, const fmpz *op2, long len2, 
                 const fmpz *mod, const fmpz *invmod, long lenmod, const fmpz_t pN)

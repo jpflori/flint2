@@ -112,7 +112,7 @@ static __inline__ void qadic_dense_clear(qadic_dense_t x)
 }
 
 static __inline__ void
-_qadic_dense_reduce_no_mod_rem(fmpz* R, const fmpz *A, long lenA,
+_qadic_dense_reduce_no_mod_rem(fmpz *R, const fmpz *A, long lenA,
                                const fmpz *B, const fmpz *Binv, long lenB)
 {
     /* FMPZ_VEC_NORM(A, lenA); */
@@ -128,7 +128,7 @@ _qadic_dense_reduce_no_mod_rem(fmpz* R, const fmpz *A, long lenA,
 }
 
 static __inline__ void 
-_qadic_dense_reduce_rem(fmpz* R, fmpz *A, long lenA,
+_qadic_dense_reduce_rem(fmpz *R, fmpz *A, long lenA,
                         const fmpz *B, const fmpz *Binv, long lenB,
                         const fmpz_t pN)
 {
@@ -149,7 +149,7 @@ _qadic_dense_reduce_rem(fmpz* R, fmpz *A, long lenA,
 }
 
 static __inline__ void
-_qadic_dense_reduce_no_mod(fmpz* R, const fmpz *A, long lenA,
+_qadic_dense_reduce_no_mod(fmpz *R, const fmpz *A, long lenA,
                            const fmpz *B, const fmpz *Binv, long lenB)
 {
     /* FMPZ_VEC_NORM(A, lenA); */
@@ -188,7 +188,7 @@ _qadic_dense_reduce_no_mod(fmpz* R, const fmpz *A, long lenA,
 }
 
 static __inline__ void 
-_qadic_dense_reduce(fmpz* R, fmpz *A, long lenA,
+_qadic_dense_reduce(fmpz *R, fmpz *A, long lenA,
                     const fmpz *B, const fmpz *Binv, long lenB,
                     const fmpz_t pN)
 {
@@ -231,7 +231,7 @@ _qadic_dense_reduce(fmpz* R, fmpz *A, long lenA,
 }
 
 static __inline__ void 
-_qadic_dense_reduce_char_2(fmpz* R, fmpz *A, long lenA,
+_qadic_dense_reduce_char_2(fmpz *R, fmpz *A, long lenA,
                     const fmpz *B, const fmpz *Binv, long lenB,
                     long N)
 {
@@ -518,6 +518,12 @@ qadic_dense_neg(qadic_dense_t x, const qadic_dense_t y, const qadic_dense_ctx_t 
     padic_poly_neg(x, y, &ctx->pctx);
 }
 
+void _qadic_dense_mul_char_2(fmpz *rop, const fmpz *op1, long len1, const fmpz *op2, long len2, 
+                             const fmpz *mod, const fmpz *invmod, long lenmod, long N);
+
+void _qadic_dense_mul(fmpz *rop, const fmpz *op1, long len1, const fmpz *op2, long len2, 
+                      const fmpz *mod, const fmpz *invmod, long lenmod, const fmpz_t pN);
+
 void qadic_dense_mul(qadic_dense_t x, const qadic_dense_t y, const qadic_dense_t z,
                      const qadic_dense_ctx_t ctx);
 
@@ -527,11 +533,19 @@ void _qadic_dense_inv(fmpz *rop, const fmpz *op, long len,
 
 void qadic_dense_inv(qadic_dense_t x, const qadic_dense_t y, const qadic_dense_ctx_t ctx);
 
+void _qadic_dense_sqr_char_2(fmpz *rop, const fmpz *op, long len,
+                             const fmpz *mod, const fmpz *invmod, long lenmod, long N);
+
+void _qadic_dense_sqr(fmpz *rop, const fmpz *op, long len,
+                      const fmpz *mod, const fmpz *invmod, long lenmod, const fmpz_t pN);
+
 void qadic_dense_sqr(qadic_dense_t x, const qadic_dense_t y, const qadic_dense_ctx_t ctx);
 
+void _qadic_dense_pow_char_2(fmpz *rop, const fmpz *op, long len, const fmpz_t e, 
+                             const fmpz *mod, const fmpz *invmod, long lenmod, long N);
+
 void _qadic_dense_pow(fmpz *rop, const fmpz *op, long len, const fmpz_t e, 
-                const fmpz *mod, const fmpz *invmod, long lenmod, 
-                const fmpz_t p);
+                      const fmpz *mod, const fmpz *invmod, long lenmod, const fmpz_t p);
 
 void qadic_dense_pow(qadic_dense_t x, const qadic_dense_t y, const fmpz_t e, const qadic_dense_ctx_t ctx);
 

@@ -30,7 +30,6 @@
     Requires rop to be of size at least 2 * len - 1.
  */
 
-static 
 void _qadic_dense_sqr_char_2(fmpz *rop, const fmpz *op, long len,
                              const fmpz *mod, const fmpz *invmod, long lenmod, long N)
 {
@@ -46,7 +45,6 @@ void _qadic_dense_sqr_char_2(fmpz *rop, const fmpz *op, long len,
     _fmpz_vec_clear(t, 2 * len - 1);
 }
 
-static 
 void _qadic_dense_sqr(fmpz *rop, const fmpz *op, long len,
                 const fmpz *mod, const fmpz *invmod, long lenmod, const fmpz_t pN)
 {
