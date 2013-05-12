@@ -40,7 +40,7 @@ profile: $(PROF_SOURCES) $(BUILD_DIR)/../../profiler.o $(HEADERS) | $(BUILD_DIR)
 tune: $(TUNE_SOURCES) $(HEADERS) | $(BUILD_DIR)/tune/
 	$(AT)$(foreach prog, $(TUNE), $(CC) $(CFLAGS) $(INCS) $(prog).c -o $(BUILD_DIR)/$(prog) $(LIBS) || exit $$?;)
 
-$(BUILD_DIR)/:
+%/:
 	mkdir -p $@
 
 $(BUILD_DIR)/$(MOD_DIR)_%.o: %.c $(HEADERS)
