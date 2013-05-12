@@ -86,11 +86,11 @@ $(FLINT_LIB): $(LOBJS) $(LIB_SOURCES) $(EXT_SOURCES) $(HEADERS) $(EXT_HEADERS) |
 	$(AT)$(foreach ext, $(EXTENSIONS), $(foreach dir, $(patsubst $(ext)/%.h, %, $(wildcard $(ext)/*.h)), export BUILD_DIR=$(CURDIR)/build/$(dir) MOD_DIR=$(dir); $(MAKE) -f $(CURDIR)/Makefile.subdirs -C $(ext)/$(dir) shared || exit $$?;))
 	$(AT)$(foreach dir, $(BUILD_DIRS), export BUILD_DIR=../build/$(dir) MOD_DIR=$(dir); $(MAKE) -f ../Makefile.subdirs -C $(dir) shared || exit $$?;)
 	$(AT)if [ "$(WANT_NTL)" -eq "1" ]; then \
-	  $(MAKE) build/interfaces/NTL-interface.lo; \
-	  $(CXX) $(ABI_FLAG) -shared build/interfaces/NTL-interface.lo $(LOBJS) $(MOD_LOBJS) $(EXT_OBJS) $(LIBS2) -o $(FLINT_LIB); \
+		$(MAKE) build/interfaces/NTL-interface.lo; \
+		$(CXX) $(ABI_FLAG) -shared build/interfaces/NTL-interface.lo $(LOBJS) $(MOD_LOBJS) $(EXT_OBJS) $(LIBS2) -o $(FLINT_LIB); \
 	fi
 	$(AT)if [ "$(WANT_NTL)" -ne "1" ]; then \
-	  $(CC) $(ABI_FLAG) -shared $(LOBJS) $(MOD_LOBJS) $(EXT_OBJS) $(LIBS2) -o $(FLINT_LIB); \
+		$(CC) $(ABI_FLAG) -shared $(LOBJS) $(MOD_LOBJS) $(EXT_OBJS) $(LIBS2) -o $(FLINT_LIB); \
 	fi
 
 libflint.a: $(OBJS) $(LIB_SOURCES) $(EXT_SOURCES) $(HEADERS) $(EXT_HEADERS) | build/ build/interfaces/
