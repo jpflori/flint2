@@ -89,7 +89,7 @@ mp_size_t flint_mpn_remove_power_ascending(mp_ptr x, mp_size_t xsize,
     large powers. Because of its high overhead, it should not be used as
     the first stage of trial division.
 
-int flint_mpn_factor_trial(mp_srcptr x, mp_size_t xsize, long start, long stop)
+int flint_mpn_factor_trial(mp_srcptr x, mp_size_t xsize, slong start, slong stop)
 
     Searches for a factor of \code{(x, xsize)} among the primes in positions 
     \code{start, ..., stop-1} of \code{flint_primes}. Returns $i$ if 
@@ -126,7 +126,7 @@ mp_limb_t flint_mpn_divrem_preinv1(mp_ptr q, mp_ptr a,
     in \code{a, n} and the rest of the quotient in \code{q, m - n}.
     We require the most significant bit of \code{b, n} to be 1.
     dinv must be computed from \code{b[n - 1]}, \code{b[n - 2]} by 
-    flint_mpn_preinv1. We also require \code{m >= n >= 2}.
+    \code{flint_mpn_preinv1}. We also require \code{m >= n >= 2}.
 
 void flint_mpn_mulmod_preinv1(mp_ptr r, 
                  mp_srcptr a, mp_srcptr b, mp_size_t n, 
@@ -193,7 +193,7 @@ mp_size_t flint_mpn_gcd_full(mp_ptr arrayg,
 
 void flint_mpn_harmonic_odd_balanced(mp_ptr t, mp_size_t * tsize,
                                mp_ptr v, mp_size_t * vsize,
-                               long a, long b, long n, int d)
+                               slong a, slong b, slong n, int d)
 
     Computes \code{(t,tsize)} and \code{(v,vsize)} such that 
     $t/v = H_n = 1 + 1/2 + \dotsb + 1/n$.
